@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1b1030" />
+    <meta name="description" content="Tetherlings — a two-player online co-op adventure. Two guardians bound by a cursed chain climb the shattered World Spire." />
+    <title>Tetherlings</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <div id="ui">
+      <div class="topbar">
+        <div id="net-status" class="net-status" role="status"></div>
+        <button id="pause-btn" class="icon-btn" type="button" aria-label="Pause menu" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
+        </button>
+        <button id="mute-btn" class="icon-btn" type="button" aria-label="Mute sound" aria-pressed="false">
+          <svg class="ico-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>
+          <svg class="ico-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="wave" d="M17 9.5l5 5M22 9.5l-5 5" /></svg>
+        </button>
+      </div>
+
+      <!-- Main menu -->
+      <section class="screen is-active" data-screen="menu">
+        <div class="panel panel--menu">
+          <div class="logo">
+            <span class="sparkle sparkle--a" aria-hidden="true">✦</span>
+            <span class="sparkle sparkle--b" aria-hidden="true">✦</span>
+            <span class="sparkle sparkle--c" aria-hidden="true">✧</span>
+            <img class="logo-mark" src="/logo-mark.svg" alt="" width="180" height="96" />
+            <h1>Tetherlings</h1>
+          </div>
+          <p class="tagline">Two guardians. One cursed chain. Climb the Spire together.</p>
+
+          <button id="create-btn" class="btn btn--primary btn--lg" type="button">Create room</button>
+
+          <div class="divider"><span>or join a friend</span></div>
+
+          <form id="join-form" class="join-row" novalidate>
+            <input id="join-input" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-label="Room code" />
+            <button id="join-btn" class="btn btn--secondary" type="submit">Join</button>
+          </form>
+          <p id="join-error" class="form-error" role="alert"></p>
+
+          <ul class="howto">
+            <li><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>Move</span></li>
+            <li><span class="keys"><kbd class="wide">Space</kbd></span><span>Jump &middot; climb the chain</span></li>
+            <li><span class="keys"><kbd class="wide">Shift</kbd></span><span>Brace &mdash; anchor your partner</span></li>
+            <li><span class="keys"><svg class="mini-chain" viewBox="0 0 64 36" aria-hidden="true"><rect x="3" y="4" width="34" height="28" rx="14" /><rect x="27" y="4" width="34" height="28" rx="14" /></svg></span><span>Stay close &mdash; you share a chain</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Lobby: room + creature on the left, chapter map on the right -->
+      <section class="screen screen--lobby" data-screen="lobby">
+        <div class="panel panel--lobby">
+          <div class="lobby-head">
+            <div>
+              <p class="eyebrow">Room code</p>
+              <div class="room-code">
+                <span id="room-code">----</span>
+                <button id="copy-btn" class="icon-btn icon-btn--sm" type="button" aria-label="Copy room code">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
+                </button>
+              </div>
+            </div>
+            <button id="leave-btn" class="btn btn--ghost btn--sm" type="button">Leave</button>
+          </div>
+
+          <div class="slots">
+            <div class="slot" id="slot-me">
+              <img class="slot-portrait" alt="" />
+              <div class="slot-text">
+                <p class="slot-name">You</p>
+                <p class="slot-sub"></p>
+              </div>
+            </div>
+            <div class="slot is-empty" id="slot-mate">
+              <img class="slot-portrait" alt="" />
+              <div class="slot-text">
+                <p class="slot-name">Teammate</p>
+                <p class="slot-sub">Waiting to join&hellip;</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="eyebrow">Choose your guardian</p>
+          <div id="creature-grid" class="creature-grid" role="radiogroup" aria-label="Creature"></div>
+          <div id="color-grid" class="color-grid" role="radiogroup" aria-label="Color"></div>
+        </div>
+
+        <div class="panel panel--map">
+          <p class="eyebrow">Chapter one</p>
+          <h2 class="map-title">The Shattered Isles</h2>
+          <ol id="level-list" class="level-list"></ol>
+          <button id="start-btn" class="btn btn--primary btn--lg" type="button" disabled>Waiting for teammate&hellip;</button>
+          <p id="lobby-hint" class="hint">Share the code — your friend joins from the main menu.</p>
+        </div>
+      </section>
+
+      <!-- Story dialogue -->
+      <section class="screen screen--story" data-screen="story">
+        <div id="title-card" class="title-card">
+          <p id="title-card-kicker" class="title-kicker"></p>
+          <h2 id="title-card-name"></h2>
+          <p id="title-card-tagline"></p>
+        </div>
+        <button id="story-skip" class="btn btn--ghost btn--sm story-skip" type="button">Skip</button>
+        <div id="dialogue" class="dialogue" aria-live="polite">
+          <div id="dialogue-portrait" class="dialogue-portrait"></div>
+          <div class="dialogue-body">
+            <p id="dialogue-name" class="dialogue-name"></p>
+            <p id="dialogue-text" class="dialogue-text"></p>
+            <p id="dialogue-next" class="dialogue-next"><kbd class="wide">Space</kbd> Continue</p>
+          </div>
+        </div>
+        <p id="story-waiting" class="story-waiting">Waiting for your partner to finish reading&hellip;</p>
+      </section>
+
+      <!-- In-level HUD -->
+      <section class="screen screen--hud" data-screen="hud">
+        <div class="hud-level">
+          <p id="hud-level-kicker" class="eyebrow"></p>
+          <p id="hud-level-name" class="hud-level-name"></p>
+        </div>
+        <div class="hud-top">
+          <div class="hud-timer"><span id="hud-time">0.0</span><small>s</small></div>
+        </div>
+        <div id="boss-bar" class="boss-bar">
+          <p class="boss-name">The Iron Warden</p>
+          <div id="boss-hp" class="boss-hp"></div>
+        </div>
+        <div id="hud-gems" class="hud-gems" aria-label="Heartstone shards"></div>
+        <div id="banner" class="banner" aria-live="polite"></div>
+        <div id="hud-hint" class="hud-hint" aria-live="polite"></div>
+        <div class="hud-controls">
+          <span><kbd>WASD</kbd> Move</span><span><kbd>Space</kbd> Jump</span><span id="brace-indicator"><kbd>Shift</kbd> Brace</span>
+        </div>
+      </section>
+
+      <!-- Level complete -->
+      <section class="screen" data-screen="complete">
+        <div class="panel panel--result">
+          <p id="complete-kicker" class="eyebrow">Level complete</p>
+          <h2 id="complete-name"></h2>
+          <div id="complete-gems" class="result-gems"></div>
+          <dl class="stats">
+            <div><dt>Time</dt><dd id="complete-time">0.0s</dd></div>
+            <div><dt>Shards</dt><dd id="complete-shards">0/3</dd></div>
+            <div><dt>Falls</dt><dd id="complete-falls">0</dd></div>
+          </dl>
+          <div class="btn-row">
+            <button id="next-btn" class="btn btn--primary btn--lg" type="button">Continue</button>
+            <div class="btn-pair">
+              <button id="replay-btn" class="btn btn--ghost" type="button">Replay</button>
+              <button id="map-btn" class="btn btn--ghost" type="button">Chapter map</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Chapter complete -->
+      <section class="screen" data-screen="chapter">
+        <div class="panel panel--result panel--chapter">
+          <div class="chapter-shard" aria-hidden="true"></div>
+          <p class="eyebrow">Chapter one complete</p>
+          <h2>The Shattered Isles</h2>
+          <p class="muted">The first Heartstone shard is yours. The Oathchain loosens — but Vorrak waits at the top of the Spire.</p>
+          <p class="result-best">Shards gathered <span id="chapter-gems">0/15</span></p>
+          <p class="tbc">To be continued&hellip;</p>
+          <div class="btn-row">
+            <button id="chapter-map-btn" class="btn btn--primary btn--lg" type="button">Back to the chapter map</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Teammate left / connection lost -->
+      <section class="screen" data-screen="disconnected">
+        <div class="panel panel--notice">
+          <h2 id="disconnect-title">Your teammate left</h2>
+          <p id="disconnect-text" class="muted">The chain snapped. Keep the room open for someone new, or head back to the menu.</p>
+          <div class="btn-row">
+            <button id="back-to-lobby-btn" class="btn btn--primary" type="button">Back to lobby</button>
+            <button id="disconnect-menu-btn" class="btn btn--ghost" type="button">Main menu</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="pause" class="pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+        <div class="panel">
+          <h2 id="pause-title">Paused</h2>
+          <p class="muted">You’re playing online — your partner is still in the level.</p>
+          <div class="btn-row">
+            <button id="resume-btn" class="btn btn--primary btn--lg" type="button">Resume</button>
+            <button id="pause-restart-btn" class="btn btn--secondary" type="button">Restart level</button>
+            <div class="btn-pair">
+              <button id="pause-map-btn" class="btn btn--ghost" type="button">Chapter map</button>
+              <button id="pause-leave-btn" class="btn btn--ghost" type="button">Leave room</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fade" class="fade"></div>
+      <div id="toast" class="toast" role="status"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
