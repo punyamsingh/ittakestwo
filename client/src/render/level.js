@@ -4,7 +4,7 @@ import { buildPlatform, buildDecor } from './platforms.js';
 import { createSpinner } from './spinner.js';
 import { levelTextures, runeTexture, textures } from './textures.js';
 
-const PLATE_COLORS = ['#6fe3d1', '#ffc25e', '#b98bff', '#ff8fd0'];
+const PLATE_COLORS = ['#b5c94a', '#f2c94c', '#5b8fe0', '#e0673d'];
 const DOWN = new THREE.Vector3(0, -1, 0);
 
 function additive(color, opacity = 1, map = textures().glow) {
@@ -15,10 +15,10 @@ function buildGem() {
   const g = new THREE.Group();
   const shard = new THREE.Mesh(
     new THREE.OctahedronGeometry(0.32, 0),
-    new THREE.MeshStandardMaterial({ color: '#e6d4ff', emissive: '#9a6bff', emissiveIntensity: 2.6, roughness: 0.1, metalness: 0.2 })
+    new THREE.MeshStandardMaterial({ color: '#c8d8ff', emissive: '#4066c6', emissiveIntensity: 2.6, roughness: 0.1, metalness: 0.2 })
   );
   shard.scale.y = 1.6;
-  const inner = new THREE.Sprite(additive('#8fe8ff', 0.9));
+  const inner = new THREE.Sprite(additive('#7fa2ff', 0.9));
   inner.scale.setScalar(1.4);
   g.add(shard, inner);
   return { group: g, shard };
@@ -26,15 +26,15 @@ function buildGem() {
 
 function buildCheckpoint() {
   const g = new THREE.Group();
-  const stone = new THREE.MeshStandardMaterial({ color: '#8e7fa3', roughness: 0.8 });
+  const stone = new THREE.MeshStandardMaterial({ color: '#8a7560', roughness: 0.8 });
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.3, 10), stone);
   base.position.y = 0.15;
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), stone);
   pole.position.y = 1.35;
-  const flagMat = new THREE.MeshStandardMaterial({ color: '#6d6180', side: THREE.DoubleSide, roughness: 0.9 });
+  const flagMat = new THREE.MeshStandardMaterial({ color: '#6d5a48', side: THREE.DoubleSide, roughness: 0.9 });
   const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.55, 6, 1), flagMat);
   flag.position.set(0.47, 2.15, 0);
-  const crystalMat = new THREE.MeshStandardMaterial({ color: '#b6a8c8', emissive: '#000000', roughness: 0.3 });
+  const crystalMat = new THREE.MeshStandardMaterial({ color: '#b8a690', emissive: '#000000', roughness: 0.3 });
   const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), crystalMat);
   crystal.position.y = 2.65;
   crystal.scale.y = 1.5;
@@ -111,11 +111,11 @@ function buildPad() {
   base.position.y = 0.07;
   const top = new THREE.Mesh(
     new THREE.CircleGeometry(0.85, 32),
-    new THREE.MeshBasicMaterial({ map: levelTextures().chevrons, color: '#8ff0ff', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
+    new THREE.MeshBasicMaterial({ map: levelTextures().chevrons, color: '#a8c4ff', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
   );
   top.rotation.x = -Math.PI / 2;
   top.position.y = 0.15;
-  const halo = new THREE.Sprite(additive('#4fdcff', 0.5));
+  const halo = new THREE.Sprite(additive('#5b8fe0', 0.5));
   halo.position.y = 0.5;
   halo.scale.setScalar(2.2);
   g.add(base, top, halo);
@@ -127,7 +127,7 @@ function buildWind(zone) {
   const dir = new THREE.Vector3(zone.force[0], 0, zone.force[2]).normalize();
   const geo = new THREE.PlaneGeometry(1.6, 0.06);
   geo.rotateX(-Math.PI / 2);
-  const mat = new THREE.MeshBasicMaterial({ color: '#f4f0ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  const mat = new THREE.MeshBasicMaterial({ color: '#fff4e4', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.frustumCulled = false;
   const min = new THREE.Vector3(...zone.min);
@@ -297,7 +297,7 @@ export function createLevelView(scene, def) {
       }
       for (const c of checkpoints) {
         const k = c.lit ? 1 : 0;
-        c.flagMat.color.set(c.lit ? '#ffc25e' : '#6d6180');
+        c.flagMat.color.set(c.lit ? '#ffc25e' : '#6d5a48');
         c.crystalMat.emissive.set(c.lit ? '#ff9d3c' : '#000000');
         c.crystalMat.emissiveIntensity = 2.6 * k;
         c.halo.material.opacity = 0.7 * k;

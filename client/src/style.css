@@ -1684,10 +1684,10 @@ kbd {
 
 .btn--secondary {
   color: #ffffff;
-  background: linear-gradient(180deg, #b6d1ff, #7fa9f2);
+  background: linear-gradient(180deg, #6f95e6, #4066c6);
   box-shadow:
     0 2px 0 rgba(255, 255, 255, 0.45) inset,
-    0 5px 0 #4f7bc6,
+    0 5px 0 #26407e,
     0 12px 22px rgba(90, 141, 230, 0.35);
 }
 
@@ -1720,8 +1720,8 @@ kbd {
   height: 28px;
   border-radius: 10px;
   color: #65432f;
-  background: linear-gradient(180deg, #ffffff, #dce9ff);
-  box-shadow: 0 3px 0 #8ba7d8, 0 5px 8px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, #fffaf0, #f1e0c8);
+  box-shadow: 0 3px 0 #b08a62, 0 5px 8px rgba(0, 0, 0, 0.2);
 }
 
 .hud-controls kbd,

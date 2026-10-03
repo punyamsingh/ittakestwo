@@ -169,7 +169,7 @@ export function createEffects(scene, camera, renderer) {
     impact([x, , z], y = 0) {
       const orange = col('#ff8a3c');
       const yellow = col('#ffe08a');
-      const smoke = col('#5a3848');
+      const smoke = col('#4a3428');
       for (let i = 0; i < 34; i++) {
         const a = Math.random() * Math.PI * 2;
         const s = 3 + Math.random() * 7;

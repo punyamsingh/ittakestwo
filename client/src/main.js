@@ -85,7 +85,7 @@ const motion = [0, 1].map(() => ({ prev: new THREE.Vector3(), vel: new THREE.Vec
 const braceRings = [0, 1].map(() => {
   const m = new THREE.Mesh(
     new THREE.RingGeometry(0.55, 0.78, 40),
-    new THREE.MeshBasicMaterial({ color: '#6fe3d1', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })
+    new THREE.MeshBasicMaterial({ color: '#b5c94a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })
   );
   m.rotation.x = -Math.PI / 2;
   m.renderOrder = 4;
@@ -500,8 +500,8 @@ function handleEvent(type, e) {
       if (levelDef) ui.showHint(e.checkpoint >= 0 ? 'Back to the checkpoint — the chain holds.' : 'Back to the start — try again!', 2500);
       break;
     case 'gem':
-      effects.sparkle(e.pos, '#b99bff', 26);
-      effects.hitBurst(e.pos, '#9a6bff');
+      effects.sparkle(e.pos, '#5b8fe0', 26);
+      effects.hitBurst(e.pos, '#4066c6');
       audio.gem();
       break;
     case 'checkpoint':
@@ -516,7 +516,7 @@ function handleEvent(type, e) {
     }
     case 'pad':
       audio.pad();
-      effects.sparkle([e.pos[0], e.pos[1] + 0.4, e.pos[2]], '#8ff0ff', 18);
+      effects.sparkle([e.pos[0], e.pos[1] + 0.4, e.pos[2]], '#a8c4ff', 18);
       levelView?.padKick((levelDef.pads ?? []).findIndex((p) => p.pos[0] === e.pos[0] && p.pos[2] === e.pos[2]));
       break;
     case 'plate':
@@ -551,7 +551,7 @@ function handleEvent(type, e) {
       bossView?.strike();
       audio.strike();
       cam.addTrauma(0.85);
-      effects.hitBurst([0, 6, 0], '#c9f6ff');
+      effects.hitBurst([0, 6, 0], '#c8d8ff');
       ui.banner(e.hp > 0 ? 'Direct hit!' : 'The Warden falls!');
       break;
     case 'boss-defeated':

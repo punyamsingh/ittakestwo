@@ -55,7 +55,7 @@ export function createArm({ length, hubRadius, energy = '#ff2d55', scale = 1 }) 
   const width = SWEEPER.halfWidth * 2 * scale;
   const pivot = new THREE.Group();
 
-  const metal = new THREE.MeshStandardMaterial({ color: '#2c2340', metalness: 0.55, roughness: 0.35, transparent: true });
+  const metal = new THREE.MeshStandardMaterial({ color: '#2e2620', metalness: 0.55, roughness: 0.35, transparent: true });
   const glow = new THREE.MeshStandardMaterial({ color: '#ffd0da', emissive: energy, emissiveIntensity: 3.4, roughness: 0.3, transparent: true });
 
   const beam = new THREE.Mesh(new RoundedBoxGeometry(reach, height, width, 3, Math.min(0.1, width / 3)), metal);
@@ -96,7 +96,7 @@ export function createArm({ length, hubRadius, energy = '#ff2d55', scale = 1 }) 
 export function createSpinner(def) {
   const group = new THREE.Group();
   group.position.set(...def.pos);
-  const stone = new THREE.MeshStandardMaterial({ color: '#4a3150', roughness: 0.75 });
+  const stone = new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.75 });
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 1.1, 24), stone);
   base.position.y = 0.55;
   base.castShadow = true;

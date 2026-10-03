@@ -469,7 +469,7 @@ const BUILDERS = { dragon, golem, slime, robot, cat };
 
 export function buildCreature(avatar) {
   const type = CREATURE_TYPES.includes(avatar?.type) ? avatar.type : 'dragon';
-  const pal = palette(avatar?.color || '#ff5d5d');
+  const pal = palette(avatar?.color || '#d4602f');
   const owned = [];
   const mats = (m) => {
     owned.push({ mat: m, emissive: m.emissive?.clone() ?? null, intensity: m.emissiveIntensity ?? 0 });

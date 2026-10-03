@@ -5,14 +5,14 @@ const ARENA_RADIUS = 12;
 import { textures } from './textures.js';
 
 const PALETTE = {
-  skyTop: new THREE.Color('#1d1646'),
-  skyMid: new THREE.Color('#6b3a8f'),
-  horizon: new THREE.Color('#ff9a78'),
-  below: new THREE.Color('#7a4a8e'),
-  sun: new THREE.Color('#ffc98a'),
-  cloudLit: new THREE.Color('#ffbfa3'),
-  cloudShade: new THREE.Color('#7d4a8f'),
-  fog: new THREE.Color('#b77a9e'),
+  skyTop: new THREE.Color('#1b2033'),
+  skyMid: new THREE.Color('#59556b'),
+  horizon: new THREE.Color('#f0a860'),
+  below: new THREE.Color('#4a2a18'),
+  sun: new THREE.Color('#ffd08a'),
+  cloudLit: new THREE.Color('#ffd6a8'),
+  cloudShade: new THREE.Color('#6a5a6e'),
+  fog: new THREE.Color('#9e7a62'),
 };
 
 // ---------- small deterministic noise helpers ----------
@@ -225,7 +225,7 @@ function buildArena(scene, rand) {
   // Grout bed under the tiles.
   const bed = new THREE.Mesh(
     new THREE.CylinderGeometry(ARENA_RADIUS + 0.05, ARENA_RADIUS + 0.05, 0.3, 96),
-    new THREE.MeshStandardMaterial({ color: '#3b2340', roughness: 1 })
+    new THREE.MeshStandardMaterial({ color: '#2a160c', roughness: 1 })
   );
   bed.position.y = -0.2;
   bed.receiveShadow = true;
@@ -263,10 +263,10 @@ function buildUnderside(rand) {
   const geo = new THREE.LatheGeometry(profile, 56);
   const pos = geo.attributes.position;
   const colors = new Float32Array(pos.count * 3);
-  const moss = new THREE.Color('#5f9a4e');
-  const mossDark = new THREE.Color('#3f6f3e');
-  const rockTop = new THREE.Color('#7a4f6a');
-  const rockLow = new THREE.Color('#3a2242');
+  const moss = new THREE.Color('#8a9a2e');
+  const mossDark = new THREE.Color('#5a6620');
+  const rockTop = new THREE.Color('#8a5a3a');
+  const rockLow = new THREE.Color('#38190c');
   const c = new THREE.Color();
   const v = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -300,7 +300,7 @@ function buildUnderside(rand) {
   group.add(rock);
 
   // Glowing crystal clusters poking out of the rock.
-  const crystalMat = new THREE.MeshStandardMaterial({ color: '#8ff0ff', emissive: '#35c8ff', emissiveIntensity: 2.4, roughness: 0.2 });
+  const crystalMat = new THREE.MeshStandardMaterial({ color: '#a8c4ff', emissive: '#4066c6', emissiveIntensity: 2.4, roughness: 0.2 });
   const crystalGeo = new THREE.OctahedronGeometry(0.5, 0);
   for (let i = 0; i < 9; i++) {
     const ang = (i / 9) * Math.PI * 2 + rand() * 0.4;
@@ -329,7 +329,7 @@ function buildLanterns(group, rand) {
   const bodyGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.46, 10);
   const capGeo = new THREE.CylinderGeometry(0.13, 0.26, 0.1, 10);
   const bodyMat = new THREE.MeshStandardMaterial({ color: '#ffd29a', emissive: '#ff9a3c', emissiveIntensity: 2.6, roughness: 0.6 });
-  const capMat = new THREE.MeshStandardMaterial({ color: '#4a2a36', roughness: 0.7 });
+  const capMat = new THREE.MeshStandardMaterial({ color: '#3a2214', roughness: 0.7 });
   const halo = new THREE.SpriteMaterial({ map: textures().glow, color: '#ff9d52', transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending });
   for (let i = 0; i < 14; i++) {
     const g = new THREE.Group();
@@ -356,7 +356,7 @@ function buildIslet(rand, scale) {
   const g = new THREE.Group();
   const top = new THREE.Mesh(
     new THREE.CylinderGeometry(3, 2.7, 0.8, 9),
-    new THREE.MeshStandardMaterial({ color: '#6aa35a', roughness: 1, flatShading: true })
+    new THREE.MeshStandardMaterial({ color: '#7d8f2e', roughness: 1, flatShading: true })
   );
   g.add(top);
   const rockGeo = new THREE.ConeGeometry(2.8, 5 + rand() * 3, 9, 3);
@@ -368,11 +368,11 @@ function buildIslet(rand, scale) {
     p.setZ(i, p.getZ(i) * k);
   }
   rockGeo.computeVertexNormals();
-  const rock = new THREE.Mesh(rockGeo, new THREE.MeshStandardMaterial({ color: '#6d4262', roughness: 1, flatShading: true }));
+  const rock = new THREE.Mesh(rockGeo, new THREE.MeshStandardMaterial({ color: '#7f4625', roughness: 1, flatShading: true }));
   rock.position.y = -0.4 - rockGeo.parameters.height / 2;
   g.add(rock);
-  const trunkMat = new THREE.MeshStandardMaterial({ color: '#6b4632', roughness: 1 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: rand() > 0.5 ? '#ff9fb8' : '#7fc86a', roughness: 0.9, flatShading: true });
+  const trunkMat = new THREE.MeshStandardMaterial({ color: '#5d2911', roughness: 1 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: rand() > 0.5 ? '#c85632' : '#dfba3d', roughness: 0.9, flatShading: true });
   const trees = 1 + Math.floor(rand() * 3);
   for (let i = 0; i < trees; i++) {
     const t = new THREE.Group();
@@ -448,7 +448,7 @@ function buildMotes(scene, rand) {
 }
 
 function buildHub(group) {
-  const stone = new THREE.MeshStandardMaterial({ color: '#4a3150', roughness: 0.75 });
+  const stone = new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.75 });
   const gold = new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 0.9, metalness: 0.7, roughness: 0.3 });
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1, 0.5, 32), stone);
   base.position.y = 0.25;
@@ -459,7 +459,7 @@ function buildHub(group) {
   band.position.y = 0.44;
   const core = new THREE.Mesh(
     new THREE.OctahedronGeometry(0.36, 0),
-    new THREE.MeshStandardMaterial({ color: '#c9f6ff', emissive: '#4fd8ff', emissiveIntensity: 3, roughness: 0.2 })
+    new THREE.MeshStandardMaterial({ color: '#c8d8ff', emissive: '#4066c6', emissiveIntensity: 3, roughness: 0.2 })
   );
   core.position.y = 1.05;
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.035, 8, 48), gold);
@@ -481,7 +481,7 @@ function buildSpire(scene) {
   const tint = PALETTE.horizon.clone().lerp(PALETTE.skyMid, 0.55);
   const rock = new THREE.MeshBasicMaterial({ color: tint.clone().multiplyScalar(0.75), fog: false });
   const rockDark = new THREE.MeshBasicMaterial({ color: tint.clone().multiplyScalar(0.55), fog: false });
-  const glow = new THREE.MeshBasicMaterial({ color: '#bff4ff', fog: false });
+  const glow = new THREE.MeshBasicMaterial({ color: '#c8d8ff', fog: false });
   const g = new THREE.Group();
   const segments = [
     [26, 20, 60, -40],
@@ -508,7 +508,7 @@ function buildSpire(scene) {
   crown.position.y = 158;
   crown.scale.y = 1.6;
   g.add(crown);
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#8fe8ff', transparent: true, opacity: 0.7, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#7fa2ff', transparent: true, opacity: 0.7, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
   halo.position.y = 158;
   halo.scale.setScalar(80);
   g.add(halo);
@@ -531,9 +531,9 @@ function buildSpire(scene) {
 const KEY_OFFSET = new THREE.Vector3(10, 24, 14);
 
 function buildLights(scene) {
-  scene.add(new THREE.HemisphereLight('#ffd2c6', '#3d2150', 0.95));
+  scene.add(new THREE.HemisphereLight('#ffe2c0', '#3a2418', 0.95));
 
-  const key = new THREE.DirectionalLight('#ffe0bd', 2.6);
+  const key = new THREE.DirectionalLight('#ffd9a8', 2.6);
   key.position.copy(KEY_OFFSET);
   scene.add(key.target);
   key.castShadow = true;
@@ -544,7 +544,7 @@ function buildLights(scene) {
   key.shadow.normalBias = 0.03;
   scene.add(key);
 
-  const rim = new THREE.DirectionalLight('#9fb2ff', 1.0);
+  const rim = new THREE.DirectionalLight('#8fa6d8', 1.0);
   rim.position.set(-14, 9, -16);
   scene.add(rim);
   return key;

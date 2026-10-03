@@ -26,8 +26,8 @@ export function createBossView(scene) {
   const root = new THREE.Group();
   scene.add(root);
 
-  const iron = new THREE.MeshStandardMaterial({ color: '#3a3346', metalness: 0.7, roughness: 0.35 });
-  const ironDark = new THREE.MeshStandardMaterial({ color: '#241f2e', metalness: 0.6, roughness: 0.5 });
+  const iron = new THREE.MeshStandardMaterial({ color: '#3d3530', metalness: 0.7, roughness: 0.35 });
+  const ironDark = new THREE.MeshStandardMaterial({ color: '#251d18', metalness: 0.6, roughness: 0.5 });
   const gold = new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 0.9, metalness: 0.8, roughness: 0.3 });
   const eye = new THREE.MeshStandardMaterial({ color: '#ffd0c0', emissive: '#ff3a24', emissiveIntensity: 3.5 });
   const coreMat = new THREE.MeshStandardMaterial({ color: '#fff0d0', emissive: '#ff7a2e', emissiveIntensity: 3 });
@@ -122,20 +122,20 @@ export function createBossView(scene) {
     const g = new THREE.Group();
     const disc = new THREE.Mesh(
       new THREE.CircleGeometry(1.15, 40),
-      new THREE.MeshBasicMaterial({ map: runeTexture('#8fe8ff'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })
+      new THREE.MeshBasicMaterial({ map: runeTexture('#a8c4ff'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })
     );
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = 0.05;
-    const pillar = additiveSprite('#8fe8ff', 0, 3);
+    const pillar = additiveSprite('#7fa2ff', 0, 3);
     pillar.position.y = 1.2;
     pillar.scale.set(1.6, 4, 1);
     g.add(disc, pillar);
     root.add(g);
     return { g, disc, pillar, level: 0 };
   });
-  const arcMat = new THREE.MeshBasicMaterial({ color: '#c9f6ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const arcMat = new THREE.MeshBasicMaterial({ color: '#c8d8ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   let arcMesh = null;
-  const boltMat = new THREE.MeshBasicMaterial({ color: '#e6fbff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const boltMat = new THREE.MeshBasicMaterial({ color: '#eef2ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   let boltMeshes = [];
   let boltT = 0;
 
@@ -143,10 +143,10 @@ export function createBossView(scene) {
   const shard = new THREE.Group();
   const shardMesh = new THREE.Mesh(
     new THREE.OctahedronGeometry(0.6, 0),
-    new THREE.MeshStandardMaterial({ color: '#e6d4ff', emissive: '#9a6bff', emissiveIntensity: 3, roughness: 0.1 })
+    new THREE.MeshStandardMaterial({ color: '#c8d8ff', emissive: '#4066c6', emissiveIntensity: 3, roughness: 0.1 })
   );
   shardMesh.scale.y = 1.7;
-  shard.add(shardMesh, additiveSprite('#b99bff', 0.9, 5));
+  shard.add(shardMesh, additiveSprite('#5b8fe0', 0.9, 5));
   shard.visible = false;
   root.add(shard);
 

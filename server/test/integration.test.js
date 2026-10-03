@@ -165,7 +165,7 @@ describe('room lifecycle over the wire', () => {
     host.emit('set-avatar', { type: 'slime', color: '#00ff00' });
     await host.next('lobby-update', (l) => l.players[0].avatar.type === 'slime');
     const updates = host.allSeen('lobby-update');
-    for (const l of updates.slice(0, -1)) assert.deepEqual(l.players[0].avatar, { type: 'dragon', color: '#ff5d5d' });
+    for (const l of updates.slice(0, -1)) assert.deepEqual(l.players[0].avatar, { type: 'dragon', color: '#d4602f' });
     assert.deepEqual(updates.at(-1).players[0].avatar, { type: 'slime', color: '#00ff00' });
   });
 

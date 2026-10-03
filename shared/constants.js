@@ -72,10 +72,10 @@ export const BOSS = {
 };
 
 export const CREATURE_TYPES = ['dragon', 'golem', 'slime', 'robot', 'cat'];
-export const COLOR_SWATCHES = ['#ff5d5d', '#5da9ff', '#6be39a', '#ffc94d', '#b98bff', '#ff8fd0', '#f5efe8'];
+export const COLOR_SWATCHES = ['#d4602f', '#e8c043', '#4a72d0', '#9aad35', '#5a6e96', '#f2b880', '#f5efe8'];
 export const DEFAULT_AVATARS = [
-  { type: 'dragon', color: '#ff5d5d' },
-  { type: 'golem', color: '#5da9ff' },
+  { type: 'dragon', color: '#d4602f' },
+  { type: 'golem', color: '#e8c043' },
 ];
 
 export function isValidAvatarType(type) {

@@ -12,12 +12,12 @@ function materials() {
   if (mats) return mats;
   const tex = levelTextures();
   mats = {
-    rock: new THREE.MeshStandardMaterial({ color: '#7a506a', roughness: 0.95, flatShading: true }),
-    rockDark: new THREE.MeshStandardMaterial({ color: '#4f3252', roughness: 1, flatShading: true }),
+    rock: new THREE.MeshStandardMaterial({ color: '#8a5a3a', roughness: 0.95, flatShading: true }),
+    rockDark: new THREE.MeshStandardMaterial({ color: '#4a2614', roughness: 1, flatShading: true }),
     dirt: new THREE.MeshStandardMaterial({ color: '#8a5c48', roughness: 0.95 }),
     sandBody: new THREE.MeshStandardMaterial({ color: '#b98a62', roughness: 0.9 }),
-    marbleBody: new THREE.MeshStandardMaterial({ color: '#a998b8', roughness: 0.8 }),
-    metal: new THREE.MeshStandardMaterial({ color: '#39334f', roughness: 0.35, metalness: 0.6 }),
+    marbleBody: new THREE.MeshStandardMaterial({ color: '#b8a690', roughness: 0.8 }),
+    metal: new THREE.MeshStandardMaterial({ color: '#3a3330', roughness: 0.35, metalness: 0.6 }),
     gold: new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 0.8, metalness: 0.7, roughness: 0.3 }),
     trim: new THREE.MeshStandardMaterial({ color: '#fff0c8', emissive: '#ffb347', emissiveIntensity: 2.2, roughness: 0.4 }),
     crumbleBody: new THREE.MeshStandardMaterial({ color: '#a8744f', roughness: 0.95 }),
@@ -60,7 +60,7 @@ function islandRoot(width, depth, seed) {
 
 function grassTufts(group, w, d, seed, top = 0) {
   const geo = new THREE.ConeGeometry(0.06, 0.32, 4);
-  const mat = new THREE.MeshStandardMaterial({ color: '#7fc25e', roughness: 1 });
+  const mat = new THREE.MeshStandardMaterial({ color: '#8a9a2e', roughness: 1 });
   const count = Math.round((w * d) / 3);
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   const m = new THREE.Matrix4();
@@ -211,14 +211,14 @@ function pm(key, make) {
 export function buildDecor({ kind, pos, scale = 1, rotY }) {
   const g = new THREE.Group();
   const seed = hash(pos[0] * 3 + pos[2] * 11);
-  const marble = pm('marble', () => new THREE.MeshStandardMaterial({ color: '#e8dff0', roughness: 0.7 }));
+  const marble = pm('marble', () => new THREE.MeshStandardMaterial({ color: '#efe4d2', roughness: 0.7 }));
   const gold = materials().gold;
   switch (kind) {
     case 'tree': {
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, 1.4, 7), pm('trunk', () => new THREE.MeshStandardMaterial({ color: '#6b4632', roughness: 1 })));
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, 1.4, 7), pm('trunk', () => new THREE.MeshStandardMaterial({ color: '#5d2911', roughness: 1 })));
       trunk.position.y = 0.7;
       g.add(trunk);
-      const leaf = seed > 0.5 ? pm('leafPink', () => new THREE.MeshStandardMaterial({ color: '#ff9fbf', roughness: 0.9, flatShading: true })) : pm('leafGreen', () => new THREE.MeshStandardMaterial({ color: '#7fc86a', roughness: 0.9, flatShading: true }));
+      const leaf = seed > 0.5 ? pm('leafPink', () => new THREE.MeshStandardMaterial({ color: '#c85632', roughness: 0.9, flatShading: true })) : pm('leafGreen', () => new THREE.MeshStandardMaterial({ color: '#8a9a2e', roughness: 0.9, flatShading: true }));
       [
         [0, 1.9, 0, 0.95],
         [0.45, 1.6, 0.2, 0.6],
@@ -241,7 +241,7 @@ export function buildDecor({ kind, pos, scale = 1, rotY }) {
       break;
     }
     case 'crystal': {
-      const m = pm('crystal', () => new THREE.MeshStandardMaterial({ color: '#9ff2ff', emissive: '#35c8ff', emissiveIntensity: 2.2, roughness: 0.15 }));
+      const m = pm('crystal', () => new THREE.MeshStandardMaterial({ color: '#a8c4ff', emissive: '#4066c6', emissiveIntensity: 2.2, roughness: 0.15 }));
       for (let i = 0; i < 3; i++) {
         const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), m);
         c.scale.set(0.8, 1.8 + i * 0.4, 0.8);
@@ -252,7 +252,7 @@ export function buildDecor({ kind, pos, scale = 1, rotY }) {
       break;
     }
     case 'lantern': {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.6, 6), pm('iron', () => new THREE.MeshStandardMaterial({ color: '#3b2b40', roughness: 0.6, metalness: 0.4 })));
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.6, 6), pm('iron', () => new THREE.MeshStandardMaterial({ color: '#3a2618', roughness: 0.6, metalness: 0.4 })));
       post.position.y = 0.8;
       const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.36, 8), pm('lamp', () => new THREE.MeshStandardMaterial({ color: '#ffd29a', emissive: '#ff9a3c', emissiveIntensity: 2.6 })));
       lamp.position.y = 1.75;
@@ -319,7 +319,7 @@ export function buildDecor({ kind, pos, scale = 1, rotY }) {
       });
       const arc = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.38, 10, 32, Math.PI), marble);
       arc.position.y = 4.5;
-      const stone = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), pm('crystal', () => new THREE.MeshStandardMaterial({ color: '#9ff2ff', emissive: '#35c8ff', emissiveIntensity: 2.2 })));
+      const stone = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), pm('crystal', () => new THREE.MeshStandardMaterial({ color: '#a8c4ff', emissive: '#4066c6', emissiveIntensity: 2.2 })));
       stone.position.y = 6.9;
       stone.scale.y = 1.5;
       g.add(arc, stone);

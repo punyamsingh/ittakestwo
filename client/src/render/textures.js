@@ -122,7 +122,7 @@ function grass() {
   c.width = c.height = size;
   const ctx = c.getContext('2d');
   const r = rnd(11);
-  ctx.fillStyle = '#6fae55';
+  ctx.fillStyle = '#8a9a2e';
   ctx.fillRect(0, 0, size, size);
   for (let k = 0; k < 1400; k++) {
     const shade = r();
@@ -202,8 +202,8 @@ function banner() {
   c.height = 256;
   const ctx = c.getContext('2d');
   const g = ctx.createLinearGradient(0, 0, 0, 256);
-  g.addColorStop(0, '#3b3a8f');
-  g.addColorStop(1, '#23205a');
+  g.addColorStop(0, '#2f4a8f');
+  g.addColorStop(1, '#1d2c5a');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, 128, 256);
   ctx.fillStyle = '#ffc25e';
@@ -236,7 +236,7 @@ export function levelTextures() {
   if (levelCache) return levelCache;
   levelCache = {
     sand: tiles({ base: '#e2b98a', grout: '#8a5a44', seed: 3 }),
-    marble: tiles({ base: '#ece2f0', grout: '#9d8fae', vary: 0.05, seed: 7 }),
+    marble: tiles({ base: '#efe4d2', grout: '#a08a70', vary: 0.05, seed: 7 }),
     crumble: tiles({ base: '#d9a878', grout: '#6d4432', vary: 0.1, cracks: true, seed: 5 }),
     grass: grass(),
     chevrons: chevrons(),

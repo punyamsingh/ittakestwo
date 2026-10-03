@@ -2,8 +2,8 @@
 // creatures (host / guest); the UI swaps in their creature name and colour.
 
 export const SPEAKERS = {
-  narrator: { name: 'The Chronicle', color: '#e9d8ff' },
-  aeris: { name: 'Aeris, Spirit of the Spire', color: '#8fe8ff' },
+  narrator: { name: 'The Chronicle', color: '#f1e0c8' },
+  aeris: { name: 'Aeris, Spirit of the Spire', color: '#a8c4ff' },
   vorrak: { name: 'Vorrak the Unbound', color: '#ff5d6c' },
   warden: { name: 'The Iron Warden', color: '#ffb35c' },
 };

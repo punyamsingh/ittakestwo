@@ -10,11 +10,11 @@ export function createPortraits(size = 192) {
   renderer.toneMappingExposure = 1.1;
 
   const scene = new THREE.Scene();
-  scene.add(new THREE.HemisphereLight('#ffe6d6', '#43285a', 1.8));
+  scene.add(new THREE.HemisphereLight('#ffe8d0', '#3a2418', 1.8));
   const key = new THREE.DirectionalLight('#ffe2c4', 2.6);
   key.position.set(2, 4, 5);
   scene.add(key);
-  const rim = new THREE.DirectionalLight('#a9b8ff', 1.6);
+  const rim = new THREE.DirectionalLight('#8fa6d8', 1.6);
   rim.position.set(-3, 2, -3);
   scene.add(rim);
 

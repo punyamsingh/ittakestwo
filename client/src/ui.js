@@ -6,10 +6,10 @@ const CODE_CHARS = /[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g;
 const $ = (id) => document.getElementById(id);
 
 const EMBLEMS = {
-  aeris: `<svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="ae"><stop offset="0" stop-color="#fff"/><stop offset="0.45" stop-color="#8fe8ff"/><stop offset="1" stop-color="#8fe8ff" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="30" r="24" fill="url(#ae)"/><path d="M20 46c6 10 18 10 24 0" stroke="#bff4ff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+  aeris: `<svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="ae"><stop offset="0" stop-color="#fff"/><stop offset="0.45" stop-color="#a8c4ff"/><stop offset="1" stop-color="#a8c4ff" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="30" r="24" fill="url(#ae)"/><path d="M20 46c6 10 18 10 24 0" stroke="#c8d8ff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
   vorrak: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M4 32C16 12 48 12 60 32C48 52 16 52 4 32Z" fill="#2a0d1a" stroke="#ff5d6c" stroke-width="3"/><circle cx="32" cy="32" r="11" fill="#ff5d6c"/><rect x="30" y="21" width="4" height="22" rx="2" fill="#1a0610"/></svg>`,
-  warden: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="12" width="44" height="40" rx="10" fill="#3a3346" stroke="#ffcf7a" stroke-width="3"/><rect x="16" y="28" width="32" height="7" rx="3" fill="#ff5a2e"/><path d="M32 2l5 10H27z" fill="#ffcf7a"/></svg>`,
-  narrator: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 16c8-4 16-4 24 2v32c-8-6-16-6-24-2z" fill="#e9d8ff"/><path d="M56 16c-8-4-16-4-24 2v32c8-6 16-6 24-2z" fill="#cbb6f0"/></svg>`,
+  warden: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="12" width="44" height="40" rx="10" fill="#3d3530" stroke="#ffcf7a" stroke-width="3"/><rect x="16" y="28" width="32" height="7" rx="3" fill="#ff5a2e"/><path d="M32 2l5 10H27z" fill="#ffcf7a"/></svg>`,
+  narrator: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 16c8-4 16-4 24 2v32c-8-6-16-6-24-2z" fill="#f1e0c8"/><path d="M56 16c-8-4-16-4-24 2v32c8-6 16-6 24-2z" fill="#dcc3a0"/></svg>`,
 };
 
 function escapeHtml(text) {
