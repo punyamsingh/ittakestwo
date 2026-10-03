@@ -59,8 +59,28 @@ export function createUI({ portraits, audio, on }) {
 
   // ---------- menu ----------
 
+  // A click made before the socket connects is held and replayed on connect,
+  // rather than being swallowed by a disabled button.
+  let connected = false;
+  let pending = null;
+  function whenConnected(btn, action) {
+    if (connected) return action();
+    if (pending) pending.btn.textContent = pending.label;
+    pending = { btn, label: btn.textContent, action };
+    btn.textContent = 'Connecting…';
+    btn.setAttribute('aria-busy', 'true');
+  }
+  function flushPending() {
+    if (!pending) return;
+    const { btn, label, action } = pending;
+    pending = null;
+    btn.textContent = label;
+    btn.removeAttribute('aria-busy');
+    action();
+  }
+
   const joinInput = $('join-input');
-  $('create-btn').addEventListener('click', () => on.create());
+  $('create-btn').addEventListener('click', () => whenConnected($('create-btn'), () => on.create()));
   joinInput.addEventListener('input', () => {
     joinInput.value = joinInput.value.toUpperCase().replace(CODE_CHARS, '').slice(0, 4);
     $('join-error').textContent = '';
@@ -70,7 +90,7 @@ export function createUI({ portraits, audio, on }) {
     e.preventDefault();
     const code = joinInput.value.trim();
     if (code.length !== 4) return joinError('Room codes are 4 characters.');
-    on.join(code);
+    whenConnected($('join-btn'), () => on.join(code));
   });
 
   function joinError(message) {
@@ -421,12 +441,12 @@ export function createUI({ portraits, audio, on }) {
     $('fade').classList.toggle('is-on', on);
   }
 
-  function setConnected(connected, everConnected) {
+  function setConnected(isConnected, everConnected) {
+    connected = isConnected;
     const el = $('net-status');
     el.textContent = connected ? '' : everConnected ? 'Reconnecting…' : 'Connecting to server…';
     el.classList.toggle('is-visible', !connected);
-    $('create-btn').disabled = !connected;
-    $('join-btn').disabled = !connected;
+    if (connected) flushPending();
   }
 
   const muteBtn = $('mute-btn');
