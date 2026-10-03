@@ -2,7 +2,7 @@
 # Rooms live in memory, so keep this at a single instance.
 services:
   - type: web
-    name: it-takes-two-online
+    name: ittakestwo
     runtime: node
     plan: free
     buildCommand: npm --prefix server ci --omit=dev && npm --prefix client ci && npm run build
