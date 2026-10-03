@@ -1,0 +1,13 @@
+# One Node service runs the Socket.IO game server and serves the built client.
+# Rooms live in memory, so keep this at a single instance.
+services:
+  - type: web
+    name: it-takes-two-online
+    runtime: node
+    plan: free
+    buildCommand: npm --prefix server ci --omit=dev && npm --prefix client ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
