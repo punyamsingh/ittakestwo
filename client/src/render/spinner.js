@@ -55,7 +55,8 @@ export function createArm({ length, hubRadius, energy = '#ff2d55', scale = 1 }) 
   const width = SWEEPER.halfWidth * 2 * scale;
   const pivot = new THREE.Group();
 
-  const metal = new THREE.MeshStandardMaterial({ color: '#2e2620', metalness: 0.55, roughness: 0.35, transparent: true });
+  // A steel ruler-arm with a red warning stripe along its leading edge.
+  const metal = new THREE.MeshStandardMaterial({ color: '#9aa1a8', metalness: 0.7, roughness: 0.3, transparent: true });
   const glow = new THREE.MeshStandardMaterial({ color: '#ffd0da', emissive: energy, emissiveIntensity: 3.4, roughness: 0.3, transparent: true });
 
   const beam = new THREE.Mesh(new RoundedBoxGeometry(reach, height, width, 3, Math.min(0.1, width / 3)), metal);
@@ -96,14 +97,15 @@ export function createArm({ length, hubRadius, energy = '#ff2d55', scale = 1 }) 
 export function createSpinner(def) {
   const group = new THREE.Group();
   group.position.set(...def.pos);
-  const stone = new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.75 });
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.8, 1.1, 24), stone);
+  // An old drill motor in a paint tin drives the arms.
+  const tin = new THREE.MeshStandardMaterial({ color: '#c8323c', roughness: 0.5, metalness: 0.3 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.75, 1.1, 24), tin);
   base.position.y = 0.55;
   base.castShadow = true;
   base.receiveShadow = true;
   const core = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.28, 0),
-    new THREE.MeshStandardMaterial({ color: '#ffb0c4', emissive: '#ff2f6d', emissiveIntensity: 3, roughness: 0.2 })
+    new THREE.CylinderGeometry(0.3, 0.3, 0.2, 6),
+    new THREE.MeshStandardMaterial({ color: '#f2c94c', roughness: 0.4, metalness: 0.5 })
   );
   core.position.y = 1.4;
   group.add(base, core);

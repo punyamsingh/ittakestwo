@@ -1,19 +1,19 @@
 # It Takes Two - Online
 
-A two-player online co-op adventure. Two guardians, bound together by a cursed chain, climb the shattered World Spire to break it — through a story campaign of hand-built platforming levels and a boss fight.
+A two-player online co-op adventure inspired by *It Takes Two*. Cody and May, on the brink of divorce, wake up as dolls — May carved from wood, Cody shaped from clay — after their daughter Rose wishes on Dr. Hakim's Book of Love. Tied together by Rose's red thread, they have to cross the family shed, at doll scale, to get back to her: a story campaign of hand-built platforming levels and a boss fight.
 
-**Chapter 1 — The Shattered Isles**
+**Chapter 1 — The Shed**
 
 | # | Level | What it asks of you |
 |---|---|---|
-| 1 | Awakening | Moving together, bracing, jump pads, crumbling stone |
-| 2 | The Broken Bridge | Moving ferries, twin pressure-plate gates, lift + chain climb |
-| 3 | Windward Cliffs | Brace against gusts; climb cliffs up the chain |
-| 4 | Stormfall Ascent | Meteor fields and spinning sweeper arms |
-| 5 | The Spire Gate | Everything at once |
-| 6 | The Iron Warden | Boss: stand on both runes together to call down lightning |
+| 1 | Wake-Up Call | Moving together, bracing, springs, soggy cardboard |
+| 2 | The Workbench | Moving trays, twin button gates, lift + thread climb |
+| 3 | Through the Draft | Brace against the draft from a cracked window; climb up the thread |
+| 4 | Loose Screws | Falling bolts and spinning saw arms |
+| 5 | The Fuse Box | Everything at once |
+| 6 | The Toolbox | Boss: stand on both power buttons together to zap it |
 
-Each level has three hidden Heartstone shards, checkpoints, and a story scene before and after.
+Each level has three hidden hearts, checkpoints, and a story scene before and after. One player is May and the other is Cody — pick your partner's doll in the lobby and you swap.
 
 ## Run it
 
@@ -36,20 +36,20 @@ Tests: `npm test` — level data validation, co-op mechanics in real level layou
 ## Controls
 
 - **Move:** WASD / arrows / gamepad stick
-- **Jump:** Space / gamepad A — while dangling below a braced partner, Jump climbs the chain
-- **Brace:** hold Shift or E / gamepad B or RB — you can't be dragged or blown away, so your partner can hang off the chain
+- **Jump:** Space / gamepad A — while dangling below a braced partner, Jump climbs the thread
+- **Brace:** hold Shift or E / gamepad B or RB — you can't be dragged or blown away, so your partner can hang off the thread
 - **Pause:** Esc
 
 ## Project layout
 
 ```
 shared/
-  constants.js          gameplay tuning (movement, chain, brace, hazards, boss)
+  constants.js          gameplay tuning (movement, thread, brace, hazards, boss), the two dolls
   levels.js             all level data — platforms, movers, plates, wind, spinners, meteors, gems, checkpoints
   story.js              dialogue for every level
 server/
   level.js              authoritative level simulation (cannon-es)
-  boss.js               the Iron Warden's attack cycle and rune mechanic
+  boss.js               the Toolbox's attack cycle and power-button mechanic
   room.js               lobby, level select, story sync, level lifecycle, unlocks
   app.js                express + socket.io wiring and input validation
   test/                 node:test suites
@@ -59,7 +59,7 @@ client/
   src/net.js            snapshot interpolation and time-synced event playback
   src/audio.js          procedural WebAudio sound effects
   src/render/           renderer + post, sky/environment, level & platform builders,
-                        creatures, chain, spinners, boss, meteors, effects, camera
+                        Cody & May, the red thread, the shed, spinners, boss, falling bolts, effects, camera
 ```
 
 ### Adding a level
@@ -68,4 +68,4 @@ Levels are plain data in `shared/levels.js`; the server builds physics and the c
 
 ### Netcode
 
-The server simulates at 30Hz and broadcasts snapshots stamped with server time. The client renders ~100ms in the past and interpolates, so motion is smooth at any frame rate; one-off events (jumps, hits, impacts, shard pickups) play when the interpolated view reaches them.
+The server simulates at 30Hz and broadcasts snapshots stamped with server time. The client renders ~100ms in the past and interpolates, so motion is smooth at any frame rate; one-off events (jumps, hits, impacts, heart pickups) play when the interpolated view reaches them.

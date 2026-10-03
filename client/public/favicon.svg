@@ -1,18 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#7f4625"/>
-      <stop offset="1" stop-color="#3a2414"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
-  <!-- the "o" from the wordmark, with a guardian sitting inside -->
-  <circle cx="32" cy="35" r="19" fill="none" stroke="#7a2c14" stroke-width="11"/>
-  <circle cx="32" cy="32" r="19" fill="#5d2911" stroke="#fff7ec" stroke-width="11"/>
-  <g fill="#f2c94c" transform="translate(32 33) scale(0.62) translate(-20 -26)">
-    <path d="M10 14 8 3l7 6 5-8 5 8 7-6-2 11z"/>
-    <ellipse cx="20" cy="27" rx="15" ry="14"/>
-    <ellipse cx="12" cy="42" rx="6" ry="3.5"/>
-    <ellipse cx="28" cy="42" rx="6" ry="3.5"/>
-  </g>
+  <!-- the Book of Love's red cover, with a cream heart on it -->
+  <rect width="64" height="64" rx="16" fill="#c8323c"/>
+  <rect x="6" y="6" width="9" height="52" rx="4" fill="#8f1f2a"/>
+  <path d="M38 50C26 41.5 19 35 19 26.5 19 20.5 23.5 16 29 16c3.9 0 7.2 2 9 5 1.8-3 5.1-5 9-5 5.5 0 10 4.5 10 10.5 0 8.5-7 15-19 23.5z" fill="#fbf3e4"/>
+  <path d="M38 41c-5-3.7-8-6.6-8-10.2 0-2.6 2-4.6 4.4-4.6 1.6 0 2.9.8 3.6 2 .7-1.2 2-2 3.6-2 2.4 0 4.4 2 4.4 4.6 0 3.6-3 6.5-8 10.2z" fill="#e8334f"/>
 </svg>

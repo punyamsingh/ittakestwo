@@ -71,103 +71,169 @@ function repeating(canvas) {
   return tex;
 }
 
-// Square stone tiles with grout lines; `cracks` adds fractures for crumbling stone.
-function tiles({ base, grout, vary = 0.08, cracks = false, seed = 3 }) {
+// Wooden planks running along v, with grain, knots and dark seams.
+function planks({ base, seam, count = 4, seed = 3, vary = 0.08 }) {
   const size = 256;
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d');
   const r = rnd(seed);
-  ctx.fillStyle = grout;
-  ctx.fillRect(0, 0, size, size);
-  const n = 2;
-  const cell = size / n;
   const col = new THREE.Color(base);
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      const t = col.clone().offsetHSL(0, 0, (r() - 0.5) * vary);
-      ctx.fillStyle = `#${t.getHexString()}`;
-      ctx.fillRect(i * cell + 4, j * cell + 4, cell - 8, cell - 8);
-      // speckle
-      for (let k = 0; k < 90; k++) {
-        ctx.fillStyle = `rgba(0,0,0,${r() * 0.06})`;
-        ctx.fillRect(i * cell + 4 + r() * (cell - 10), j * cell + 4 + r() * (cell - 10), 3, 3);
-      }
-      ctx.fillStyle = 'rgba(255,255,255,0.12)';
-      ctx.fillRect(i * cell + 4, j * cell + 4, cell - 8, 3);
-    }
-  }
-  if (cracks) {
-    ctx.strokeStyle = 'rgba(40,16,12,0.8)';
-    ctx.lineWidth = 3;
-    for (let k = 0; k < 5; k++) {
-      let x = r() * size;
-      let y = r() * size;
+  const w = size / count;
+  for (let i = 0; i < count; i++) {
+    const t = col.clone().offsetHSL((r() - 0.5) * 0.02, 0, (r() - 0.5) * vary);
+    ctx.fillStyle = `#${t.getHexString()}`;
+    ctx.fillRect(i * w, 0, w, size);
+    for (let k = 0; k < 9; k++) {
+      ctx.strokeStyle = `rgba(70, 35, 12, ${0.05 + r() * 0.1})`;
+      ctx.lineWidth = 1 + r() * 1.5;
+      const x0 = i * w + 4 + r() * (w - 8);
       ctx.beginPath();
-      ctx.moveTo(x, y);
-      for (let s = 0; s < 6; s++) {
-        x += (r() - 0.5) * 70;
-        y += (r() - 0.5) * 70;
-        ctx.lineTo(x, y);
-      }
+      ctx.moveTo(x0, 0);
+      for (let y = 0; y <= size; y += 16) ctx.lineTo(x0 + Math.sin(y * 0.03 + k + i) * 2.5, y);
       ctx.stroke();
     }
+    if (r() > 0.45) {
+      ctx.fillStyle = 'rgba(80, 40, 15, 0.35)';
+      ctx.beginPath();
+      ctx.ellipse(i * w + w / 2 + (r() - 0.5) * w * 0.4, r() * size, 4, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // A butt joint somewhere along the plank, and the seam beside it.
+    ctx.fillStyle = seam;
+    ctx.fillRect(i * w, r() * size, w, 2);
+    ctx.fillRect(i * w, 0, 3, size);
+    ctx.fillStyle = 'rgba(255,240,210,0.12)';
+    ctx.fillRect(i * w + 3, 0, 2, size);
   }
   return repeating(c);
 }
 
-function grass() {
+// Corrugated cardboard with damp stains, tears and packing tape: it gives way.
+function cardboard(seed = 5) {
   const size = 256;
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d');
-  const r = rnd(11);
-  ctx.fillStyle = '#8a9a2e';
+  const r = rnd(seed);
+  ctx.fillStyle = '#c99a62';
   ctx.fillRect(0, 0, size, size);
-  for (let k = 0; k < 1400; k++) {
-    const shade = r();
-    ctx.fillStyle = shade > 0.6 ? 'rgba(160,215,110,0.5)' : shade > 0.3 ? 'rgba(70,130,60,0.45)' : 'rgba(255,210,150,0.25)';
-    ctx.fillRect(r() * size, r() * size, 2 + r() * 3, 2 + r() * 3);
+  for (let x = 0; x < size; x += 8) {
+    ctx.fillStyle = 'rgba(120, 80, 40, 0.12)';
+    ctx.fillRect(x, 0, 3, size);
   }
+  for (let k = 0; k < 3; k++) {
+    const x = r() * size;
+    const y = r() * size;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, 40 + r() * 60);
+    g.addColorStop(0, 'rgba(90, 55, 25, 0.35)');
+    g.addColorStop(1, 'rgba(90, 55, 25, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+  }
+  ctx.strokeStyle = 'rgba(70, 40, 18, 0.7)';
+  ctx.lineWidth = 3;
+  for (let k = 0; k < 4; k++) {
+    let x = r() * size;
+    let y = r() * size;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let s = 0; s < 5; s++) {
+      x += (r() - 0.5) * 60;
+      y += (r() - 0.5) * 60;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(230, 200, 140, 0.55)';
+  ctx.fillRect(0, size * 0.42, size, 34);
   return repeating(c);
 }
 
+// Cloth book cover (white, tinted per book) with a gilt border.
+function bookCover(seed = 13) {
+  const size = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const r = rnd(seed);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  for (let k = 0; k < 1600; k++) {
+    ctx.fillStyle = `rgba(0,0,0,${r() * 0.07})`;
+    ctx.fillRect(r() * size, r() * size, 2, 2);
+  }
+  ctx.strokeStyle = '#f0d488';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(18, 18, size - 36, size - 36);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(30, 30, size - 60, size - 60);
+  return repeating(c);
+}
+
+// The lid of a paint tin: pressed rings and a splash of colour.
+function tinLid(seed = 9) {
+  const size = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const r = rnd(seed);
+  const m = size / 2;
+  const g = ctx.createRadialGradient(m * 0.8, m * 0.7, 10, m, m, m);
+  g.addColorStop(0, '#e8e4dc');
+  g.addColorStop(1, '#a9a49b');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  ctx.lineWidth = 5;
+  for (const k of [0.92, 0.8, 0.5]) {
+    ctx.strokeStyle = 'rgba(70, 64, 58, 0.35)';
+    ctx.beginPath();
+    ctx.arc(m, m, m * k, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.beginPath();
+    ctx.arc(m, m, m * k - 4, Math.PI * 1.1, Math.PI * 1.7);
+    ctx.stroke();
+  }
+  const paints = ['#3f7fd8', '#e0563f', '#f2c94c', '#4f9e3f'];
+  ctx.fillStyle = paints[Math.floor(r() * paints.length)];
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.ellipse(m * 1.45, m * 0.55, 26, 16, 0.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  return repeating(c);
+}
+
+// A chunky cog with a heart at its hub: the shed's buttons, goals and boss pads.
 function runes(color) {
   const size = 256;
   const c = document.createElement('canvas');
   c.width = c.height = size;
   const ctx = c.getContext('2d');
   const m = size / 2;
-  ctx.strokeStyle = color;
   ctx.fillStyle = color;
-  ctx.lineWidth = 10;
   ctx.beginPath();
-  ctx.arc(m, m, m - 10, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.arc(m, m, m - 34, 0, Math.PI * 2);
-  ctx.stroke();
-  for (let i = 0; i < 12; i++) {
-    const a = (i / 12) * Math.PI * 2;
-    ctx.save();
-    ctx.translate(m + Math.cos(a) * (m - 22), m + Math.sin(a) * (m - 22));
-    ctx.rotate(a);
-    ctx.fillRect(-2, -8, 4, 16);
-    if (i % 3 === 0) ctx.fillRect(-7, -2, 14, 4);
-    ctx.restore();
-  }
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  for (let i = 0; i < 3; i++) {
-    const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
-    const x = m + Math.cos(a) * (m - 60);
-    const y = m + Math.sin(a) * (m - 60);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  const teeth = 12;
+  for (let i = 0; i < teeth * 2; i++) {
+    const a0 = (i / (teeth * 2)) * Math.PI * 2;
+    const a1 = ((i + 1) / (teeth * 2)) * Math.PI * 2;
+    const rr = i % 2 ? m - 30 : m - 8;
+    ctx.lineTo(m + Math.cos(a0) * rr, m + Math.sin(a0) * rr);
+    ctx.lineTo(m + Math.cos(a1) * rr, m + Math.sin(a1) * rr);
   }
   ctx.closePath();
-  ctx.stroke();
+  ctx.fill();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(m, m, m - 52, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.beginPath();
+  ctx.moveTo(m, m + 34);
+  ctx.bezierCurveTo(m - 60, m - 8, m - 26, m - 52, m, m - 22);
+  ctx.bezierCurveTo(m + 26, m - 52, m + 60, m - 8, m, m + 34);
+  ctx.fill();
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -196,32 +262,50 @@ function chevrons() {
   return tex;
 }
 
+// Rose's crayon drawing of her family, pinned up as a pennant.
 function banner() {
   const c = document.createElement('canvas');
   c.width = 128;
   c.height = 256;
   const ctx = c.getContext('2d');
-  const g = ctx.createLinearGradient(0, 0, 0, 256);
-  g.addColorStop(0, '#2f4a8f');
-  g.addColorStop(1, '#1d2c5a');
-  ctx.fillStyle = g;
+  ctx.fillStyle = '#fbf3e4';
   ctx.fillRect(0, 0, 128, 256);
-  ctx.fillStyle = '#ffc25e';
-  ctx.fillRect(0, 0, 128, 10);
-  ctx.fillRect(0, 222, 128, 6);
-  ctx.strokeStyle = '#ffc25e';
-  ctx.lineWidth = 9;
+  ctx.fillStyle = '#d8314a';
+  ctx.fillRect(0, 0, 128, 12);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  const figure = (x, h, color) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(x, 150 - h, 10, 0, Math.PI * 2);
+    ctx.moveTo(x, 160 - h);
+    ctx.lineTo(x, 190);
+    ctx.lineTo(x - 8, 212);
+    ctx.moveTo(x, 190);
+    ctx.lineTo(x + 8, 212);
+    ctx.stroke();
+  };
+  figure(30, 26, '#3f7fd8');
+  figure(64, 6, '#d9578f');
+  figure(98, 30, '#4f9e3f');
+  ctx.strokeStyle = '#7a5a3c';
+  ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.roundRect(22, 90, 50, 40, 20);
+  ctx.moveTo(30, 152);
+  ctx.lineTo(98, 152);
   ctx.stroke();
+  ctx.fillStyle = '#d8314a';
   ctx.beginPath();
-  ctx.roundRect(56, 90, 50, 40, 20);
-  ctx.stroke();
+  ctx.moveTo(64, 92);
+  ctx.bezierCurveTo(24, 66, 40, 30, 64, 52);
+  ctx.bezierCurveTo(88, 30, 104, 66, 64, 92);
+  ctx.fill();
   // swallowtail
   ctx.globalCompositeOperation = 'destination-out';
   ctx.beginPath();
   ctx.moveTo(0, 256);
-  ctx.lineTo(64, 214);
+  ctx.lineTo(64, 230);
   ctx.lineTo(128, 256);
   ctx.fill();
   const tex = new THREE.CanvasTexture(c);
@@ -235,10 +319,12 @@ const runeCache = new Map();
 export function levelTextures() {
   if (levelCache) return levelCache;
   levelCache = {
-    sand: tiles({ base: '#e2b98a', grout: '#8a5a44', seed: 3 }),
-    marble: tiles({ base: '#efe4d2', grout: '#a08a70', vary: 0.05, seed: 7 }),
-    crumble: tiles({ base: '#d9a878', grout: '#6d4432', vary: 0.1, cracks: true, seed: 5 }),
-    grass: grass(),
+    // (Keys kept from the old theme; they now hold shed surfaces.)
+    grass: planks({ base: '#c48a52', seam: '#5a3418', seed: 11 }),
+    sand: tinLid(9),
+    marble: planks({ base: '#e6c79a', seam: '#9a7448', count: 3, seed: 7, vary: 0.05 }),
+    crumble: cardboard(5),
+    book: bookCover(13),
     chevrons: chevrons(),
     banner: banner(),
   };
@@ -262,7 +348,7 @@ export function labelTexture(text, color) {
   const x = (w - tw) / 2;
   const y = 8;
   const bh = 68;
-  ctx.fillStyle = 'rgba(24, 12, 40, 0.82)';
+  ctx.fillStyle = 'rgba(251, 243, 228, 0.95)';
   ctx.beginPath();
   ctx.roundRect(x, y, tw, bh, bh / 2);
   ctx.fill();
@@ -277,7 +363,7 @@ export function labelTexture(text, color) {
   ctx.lineTo(w / 2, y + bh + 26);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#fff7ef';
+  ctx.fillStyle = '#3b2a20';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, w / 2, y + bh / 2 + 3);

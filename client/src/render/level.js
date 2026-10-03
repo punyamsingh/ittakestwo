@@ -1,47 +1,47 @@
 import * as THREE from 'three';
 import { PLATE_RADIUS } from '@shared/constants.js';
-import { buildPlatform, buildDecor } from './platforms.js';
+import { buildPlatform, buildDecor, heartGeometry } from './platforms.js';
 import { createSpinner } from './spinner.js';
 import { levelTextures, runeTexture, textures } from './textures.js';
 
-const PLATE_COLORS = ['#b5c94a', '#f2c94c', '#5b8fe0', '#e0673d'];
+const PLATE_COLORS = ['#4f9e3f', '#f2c94c', '#3f7fd8', '#e0563f'];
 const DOWN = new THREE.Vector3(0, -1, 0);
 
 function additive(color, opacity = 1, map = textures().glow) {
   return new THREE.SpriteMaterial({ map, color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending });
 }
 
+// Collectible: a little red heart from the Book of Love.
 function buildGem() {
   const g = new THREE.Group();
   const shard = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.32, 0),
-    new THREE.MeshStandardMaterial({ color: '#c8d8ff', emissive: '#4066c6', emissiveIntensity: 2.6, roughness: 0.1, metalness: 0.2 })
+    heartGeometry(0.3, 0.14),
+    new THREE.MeshStandardMaterial({ color: '#ff5a76', emissive: '#d8314a', emissiveIntensity: 1.4, roughness: 0.25 })
   );
-  shard.scale.y = 1.6;
-  const inner = new THREE.Sprite(additive('#7fa2ff', 0.9));
+  const inner = new THREE.Sprite(additive('#ff7a95', 0.7));
   inner.scale.setScalar(1.4);
   g.add(shard, inner);
   return { group: g, shard };
 }
 
+// Checkpoint: a push pin with a little paper flag that turns red when reached.
 function buildCheckpoint() {
   const g = new THREE.Group();
-  const stone = new THREE.MeshStandardMaterial({ color: '#8a7560', roughness: 0.8 });
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.3, 10), stone);
+  const steel = new THREE.MeshStandardMaterial({ color: '#c9ccd1', roughness: 0.3, metalness: 0.7 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.3, 14), new THREE.MeshStandardMaterial({ color: '#d9b07a', roughness: 0.8 }));
   base.position.y = 0.15;
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 8), stone);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), steel);
   pole.position.y = 1.35;
-  const flagMat = new THREE.MeshStandardMaterial({ color: '#6d5a48', side: THREE.DoubleSide, roughness: 0.9 });
+  const flagMat = new THREE.MeshStandardMaterial({ color: '#f3ede2', side: THREE.DoubleSide, roughness: 0.9 });
   const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.55, 6, 1), flagMat);
   flag.position.set(0.47, 2.15, 0);
-  const crystalMat = new THREE.MeshStandardMaterial({ color: '#b8a690', emissive: '#000000', roughness: 0.3 });
-  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.18, 0), crystalMat);
-  crystal.position.y = 2.65;
-  crystal.scale.y = 1.5;
-  const halo = new THREE.Sprite(additive('#ffc25e', 0));
-  halo.position.y = 2.65;
+  const crystalMat = new THREE.MeshStandardMaterial({ color: '#b9b4ab', emissive: '#000000', roughness: 0.35 });
+  const crystal = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 12), crystalMat);
+  crystal.position.y = 2.6;
+  const halo = new THREE.Sprite(additive('#ff7a95', 0));
+  halo.position.y = 2.6;
   halo.scale.setScalar(1.8);
-  [base, pole].forEach((m) => (m.castShadow = true));
+  [base, pole, crystal].forEach((m) => (m.castShadow = true));
   g.add(base, pole, flag, crystal, halo);
   return { group: g, flag, flagMat, crystal, crystalMat, halo, lit: false };
 }
@@ -50,7 +50,7 @@ function buildGoal() {
   const g = new THREE.Group();
   const circle = new THREE.Mesh(
     new THREE.CircleGeometry(2.3, 48),
-    new THREE.MeshBasicMaterial({ map: runeTexture('#ffe3a0'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9 })
+    new THREE.MeshBasicMaterial({ map: runeTexture('#ffd6a0'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.9 })
   );
   circle.rotation.x = -Math.PI / 2;
   circle.position.y = 0.04;
@@ -65,7 +65,7 @@ function buildGoal() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 4, 128);
   const beamMat = new THREE.MeshBasicMaterial({
-    color: '#ffd98a',
+    color: '#ffe2b0',
     alphaMap: new THREE.CanvasTexture(c),
     transparent: true,
     opacity: 0.55,
@@ -77,7 +77,7 @@ function buildGoal() {
   beam.position.y = 7;
   const motes = [];
   for (let i = 0; i < 8; i++) {
-    const s = new THREE.Sprite(additive('#fff0b0', 0.9));
+    const s = new THREE.Sprite(additive('#ffb3c4', 0.9));
     s.scale.setScalar(0.35);
     s.userData.phase = (i / 8) * Math.PI * 2;
     g.add(s);
@@ -89,12 +89,12 @@ function buildGoal() {
 
 function buildPlate(color) {
   const g = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(PLATE_RADIUS, PLATE_RADIUS + 0.08, 0.12, 32), new THREE.MeshStandardMaterial({ color: '#2d2638', roughness: 0.6, metalness: 0.3 }));
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(PLATE_RADIUS, PLATE_RADIUS + 0.08, 0.12, 32), new THREE.MeshStandardMaterial({ color: '#f3ede2', roughness: 0.4 }));
   base.position.y = 0.06;
   base.receiveShadow = true;
   const top = new THREE.Mesh(
     new THREE.CircleGeometry(PLATE_RADIUS * 0.92, 40),
-    new THREE.MeshBasicMaterial({ map: runeTexture(color), transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending })
+    new THREE.MeshBasicMaterial({ map: runeTexture(color), transparent: true, opacity: 0.45, depthWrite: false })
   );
   top.rotation.x = -Math.PI / 2;
   top.position.y = 0.125;
@@ -105,21 +105,32 @@ function buildPlate(color) {
   return { group: g, top, halo, press: 0 };
 }
 
+// Jump pad: a big coiled spring under a wooden button cap.
 function buildPad() {
   const g = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.05, 0.14, 32), new THREE.MeshStandardMaterial({ color: '#2d2638', metalness: 0.4, roughness: 0.4 }));
+  const steel = new THREE.MeshStandardMaterial({ color: '#c9ccd1', metalness: 0.75, roughness: 0.3 });
+  const pts = [];
+  for (let i = 0; i <= 80; i++) {
+    const a = (i / 80) * Math.PI * 2 * 4;
+    pts.push(new THREE.Vector3(Math.cos(a) * 0.75, (i / 80) * 0.5, Math.sin(a) * 0.75));
+  }
+  const coil = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.07, 6), steel);
+  coil.castShadow = true;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.05, 0.14, 32), new THREE.MeshStandardMaterial({ color: '#8f5f34', roughness: 0.8 }));
   base.position.y = 0.07;
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 0.12, 32), new THREE.MeshStandardMaterial({ color: '#f2c94c', roughness: 0.5 }));
   const top = new THREE.Mesh(
-    new THREE.CircleGeometry(0.85, 32),
-    new THREE.MeshBasicMaterial({ map: levelTextures().chevrons, color: '#a8c4ff', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
+    new THREE.CircleGeometry(0.75, 32),
+    new THREE.MeshBasicMaterial({ map: levelTextures().chevrons, color: '#c8323c', transparent: true, depthWrite: false })
   );
   top.rotation.x = -Math.PI / 2;
-  top.position.y = 0.15;
-  const halo = new THREE.Sprite(additive('#5b8fe0', 0.5));
+  top.position.y = 0.07;
+  cap.add(top);
+  const halo = new THREE.Sprite(additive('#ffd36b', 0.3));
   halo.position.y = 0.5;
   halo.scale.setScalar(2.2);
-  g.add(base, top, halo);
-  return { group: g, top, halo, kick: 0 };
+  g.add(base, coil, cap, halo);
+  return { group: g, top: cap, coil, halo, kick: 0 };
 }
 
 function buildWind(zone) {
@@ -127,7 +138,7 @@ function buildWind(zone) {
   const dir = new THREE.Vector3(zone.force[0], 0, zone.force[2]).normalize();
   const geo = new THREE.PlaneGeometry(1.6, 0.06);
   geo.rotateX(-Math.PI / 2);
-  const mat = new THREE.MeshBasicMaterial({ color: '#fff4e4', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  const mat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.frustumCulled = false;
   const min = new THREE.Vector3(...zone.min);
@@ -297,17 +308,21 @@ export function createLevelView(scene, def) {
       }
       for (const c of checkpoints) {
         const k = c.lit ? 1 : 0;
-        c.flagMat.color.set(c.lit ? '#ffc25e' : '#6d5a48');
-        c.crystalMat.emissive.set(c.lit ? '#ff9d3c' : '#000000');
-        c.crystalMat.emissiveIntensity = 2.6 * k;
+        c.flagMat.color.set(c.lit ? '#d8314a' : '#f3ede2');
+        c.crystalMat.color.set(c.lit ? '#ff5a76' : '#b9b4ab');
+        c.crystalMat.emissive.set(c.lit ? '#d8314a' : '#000000');
+        c.crystalMat.emissiveIntensity = 1.4 * k;
         c.halo.material.opacity = 0.7 * k;
         c.crystal.rotation.y += dt * 1.5;
         c.flag.rotation.y = Math.sin(t * 2 + c.group.position.z) * 0.18;
       }
       for (const p of pads) {
         p.kick = Math.max(0, p.kick - dt * 3);
-        p.top.position.y = 0.15 + Math.sin(t * 4) * 0.01;
-        p.halo.material.opacity = 0.4 + Math.sin(t * 4) * 0.12 + p.kick * 0.5;
+        // The spring boings: compressed at rest, stretched on a kick.
+        const stretch = 1 + p.kick * 0.9 * Math.abs(Math.cos(p.kick * 9));
+        p.coil.scale.y = stretch;
+        p.top.position.y = 0.56 * stretch + Math.sin(t * 4) * 0.01;
+        p.halo.material.opacity = 0.2 + Math.sin(t * 4) * 0.06 + p.kick * 0.5;
         p.halo.scale.setScalar(2.2 + p.kick * 1.5);
       }
       if (goal) {

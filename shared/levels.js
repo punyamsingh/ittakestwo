@@ -34,8 +34,8 @@ function twinPlateGate(prefix, z, y, halfWidth, plateA, plateB) {
 
 const L1 = {
   id: 'awakening',
-  name: 'Awakening',
-  tagline: 'The guardians wake in chains.',
+  name: 'Wake-Up Call',
+  tagline: 'Two dolls wake up on a dusty shed shelf.',
   spawn: [0, 0, 3],
   killY: -10,
   platforms: [
@@ -62,30 +62,30 @@ const L1 = {
   goal: { pos: [0, 5, -62.5] },
   hints: [
     { pos: [0, 0, 2], radius: 4, text: '[W][A][S][D] to move  ·  [Space] to jump' },
-    { pos: [0, 1, -9.5], radius: 3, text: 'The Oathchain binds you — you can never stray far apart. Move together!' },
-    { pos: [0, 1.8, -28.5], radius: 3.5, text: 'Hold [Shift] to BRACE and anchor the chain. Dangling off an edge? Press [Space] to climb back up!' },
-    { pos: [0, 1.8, -32.8], radius: 2, text: 'Jump pads launch you skyward. Take it together!' },
-    { pos: [0, 5, -40.2], radius: 2.5, text: 'Cracked stone crumbles underfoot — keep moving!' },
+    { pos: [0, 1, -9.5], radius: 3, text: 'Rose’s red thread ties you together — you can never stray far apart. Move together!' },
+    { pos: [0, 1.8, -28.5], radius: 3.5, text: 'Hold [Shift] to BRACE and anchor the thread. Dangling off an edge? Press [Space] to climb back up!' },
+    { pos: [0, 1.8, -32.8], radius: 2, text: 'Springs launch you up. Take it together!' },
+    { pos: [0, 5, -40.2], radius: 2.5, text: 'Soggy cardboard gives way underfoot — keep moving!' },
   ],
   decor: [
-    { kind: 'tree', pos: [-4, 0, 3.5], scale: 1.2 },
-    { kind: 'tree', pos: [4.2, 0, -3.5] },
-    { kind: 'rock', pos: [3.8, 0, 3] },
-    { kind: 'ruin', pos: [-3.8, 0, -3.8] },
-    { kind: 'crystal', pos: [3.6, 1.8, -33] },
-    { kind: 'lantern', pos: [-4, 1.8, -27] },
-    { kind: 'ruin', pos: [-3, 5, -37.5], scale: 0.8 },
-    { kind: 'banner', pos: [-3.5, 5, -60] },
-    { kind: 'banner', pos: [3.5, 5, -60] },
-    { kind: 'tree', pos: [-3.8, 5, -64], scale: 1.1 },
+    { kind: 'plant', pos: [-4, 0, 3.5], scale: 1.2 },
+    { kind: 'plant', pos: [4.2, 0, -3.5] },
+    { kind: 'nut', pos: [3.8, 0, 3] },
+    { kind: 'spool', pos: [-3.8, 0, -3.8] },
+    { kind: 'jar', pos: [3.6, 1.8, -33] },
+    { kind: 'candle', pos: [-4, 1.8, -27] },
+    { kind: 'spool', pos: [-3, 5, -37.5], scale: 0.8 },
+    { kind: 'pennant', pos: [-3.5, 5, -60] },
+    { kind: 'pennant', pos: [3.5, 5, -60] },
+    { kind: 'plant', pos: [-3.8, 5, -64], scale: 1.1 },
   ],
 };
 
 const L2gate = twinPlateGate('g', -50, 0, 6, [-1.4, 0, -47.8], [1.4, 0, -52.2]);
 const L2 = {
   id: 'broken-bridge',
-  name: 'The Broken Bridge',
-  tagline: 'What the storm broke, the old machines still carry.',
+  name: 'The Workbench',
+  tagline: 'Cody’s old projects still have a few moves left in them.',
   spawn: [0, 0, 3],
   killY: -12,
   platforms: [
@@ -114,28 +114,28 @@ const L2 = {
   goal: { pos: [0, 3.2, -84.5] },
   hints: [
     { pos: [0, 0, -3], radius: 3.5, text: 'Moving platforms carry you — time your jump and ride it together.' },
-    { pos: [0, 0, -46.5], radius: 3.5, text: 'Pressure plates open gates. One holds while the other slips through — then swap sides!' },
-    { pos: [0, 0, -54.5], radius: 3, text: 'One rides the lift, one holds the plate. Up top: BRACE with [Shift] — your partner jumps and climbs the chain.' },
+    { pos: [0, 0, -46.5], radius: 3.5, text: 'Buttons open gates. One holds while the other slips through — then swap sides!' },
+    { pos: [0, 0, -54.5], radius: 3, text: 'One rides the lift, one holds the button. Up top: BRACE with [Shift] — your partner jumps and climbs the thread.' },
   ],
   decor: [
-    { kind: 'tree', pos: [-3.8, 0, 3] },
-    { kind: 'ruin', pos: [3.5, 0, 3.5] },
-    { kind: 'lantern', pos: [-1.6, 0, -8.6] },
-    { kind: 'lantern', pos: [1.6, 0, -29.4] },
-    { kind: 'tree', pos: [-3.8, 0, -40.5], scale: 1.2 },
-    { kind: 'rock', pos: [3.5, 0, -35] },
-    { kind: 'banner', pos: [-5, 0, -45.5] },
-    { kind: 'banner', pos: [5, 0, -45.5] },
-    { kind: 'crystal', pos: [4, 3.2, -64.5] },
-    { kind: 'tree', pos: [-3.6, 3.2, -86] },
-    { kind: 'statue', pos: [3.6, 3.2, -86] },
+    { kind: 'plant', pos: [-3.8, 0, 3] },
+    { kind: 'spool', pos: [3.5, 0, 3.5] },
+    { kind: 'candle', pos: [-1.6, 0, -8.6] },
+    { kind: 'candle', pos: [1.6, 0, -29.4] },
+    { kind: 'plant', pos: [-3.8, 0, -40.5], scale: 1.2 },
+    { kind: 'nut', pos: [3.5, 0, -35] },
+    { kind: 'pennant', pos: [-5, 0, -45.5] },
+    { kind: 'pennant', pos: [5, 0, -45.5] },
+    { kind: 'jar', pos: [4, 3.2, -64.5] },
+    { kind: 'plant', pos: [-3.6, 3.2, -86] },
+    { kind: 'blocks', pos: [3.6, 3.2, -86] },
   ],
 };
 
 const L3 = {
   id: 'windward-cliffs',
-  name: 'Windward Cliffs',
-  tagline: 'The wind of the high isles answers to Vorrak.',
+  name: 'Through the Draft',
+  tagline: 'A broken window, a howling draft, and a very long way down.',
   spawn: [0, 0, 3],
   killY: -10,
   platforms: [
@@ -167,25 +167,25 @@ const L3 = {
   checkpoints: [{ pos: [0, 0, -22.5] }, { pos: [0, 5.6, -39.5] }, { pos: [0, 5.6, -61] }],
   goal: { pos: [0, 5.6, -83] },
   hints: [
-    { pos: [0, 0, -3.5], radius: 3.5, text: 'Gusts sweep the bridge. When the wind picks up — BRACE with [Shift]!' },
-    { pos: [0, 0, -28], radius: 3.5, text: 'Too tall to jump? One gets up and BRACES at the edge — the other jumps, then presses [Space] again to climb the chain.' },
+    { pos: [0, 0, -3.5], radius: 3.5, text: 'Drafts sweep the ruler. When the wind picks up — BRACE with [Shift]!' },
+    { pos: [0, 0, -28], radius: 3.5, text: 'Too tall to jump? One gets up and BRACES at the edge — the other jumps, then presses [Space] again to climb the thread.' },
   ],
   decor: [
-    { kind: 'tree', pos: [-3.5, 0, 3.5], scale: 1.1 },
-    { kind: 'rock', pos: [3.6, 0, 2.5] },
-    { kind: 'crystal', pos: [3.3, 0, -21.5] },
-    { kind: 'ruin', pos: [-3.4, 2.8, -31.5] },
-    { kind: 'lantern', pos: [3.3, 5.6, -38.5] },
-    { kind: 'tree', pos: [3.8, 5.6, -64.5] },
-    { kind: 'banner', pos: [-3.6, 5.6, -80] },
-    { kind: 'banner', pos: [3.6, 5.6, -80] },
+    { kind: 'plant', pos: [-3.5, 0, 3.5], scale: 1.1 },
+    { kind: 'nut', pos: [3.6, 0, 2.5] },
+    { kind: 'jar', pos: [3.3, 0, -21.5] },
+    { kind: 'spool', pos: [-3.4, 2.8, -31.5] },
+    { kind: 'candle', pos: [3.3, 5.6, -38.5] },
+    { kind: 'plant', pos: [3.8, 5.6, -64.5] },
+    { kind: 'pennant', pos: [-3.6, 5.6, -80] },
+    { kind: 'pennant', pos: [3.6, 5.6, -80] },
   ],
 };
 
 const L4 = {
   id: 'stormfall-ascent',
-  name: 'Stormfall Ascent',
-  tagline: 'The sky itself turns against them.',
+  name: 'Loose Screws',
+  tagline: 'The shelves above have had enough of holding things up.',
   spawn: [0, 0, 3],
   killY: -10,
   platforms: [
@@ -215,24 +215,24 @@ const L4 = {
   checkpoints: [{ pos: [0, 1, -27] }, { pos: [0, 2.2, -65] }],
   goal: { pos: [0, 2.2, -89.5] },
   hints: [
-    { pos: [0, 0, -9.5], radius: 3.5, text: 'Meteors! Orange rings mark where they’ll land — get clear, or be in the air when they hit.' },
-    { pos: [0, 1, -34.5], radius: 3, text: 'Jump the spinning arm. The red glow shows where it’s heading next.' },
+    { pos: [0, 0, -9.5], radius: 3.5, text: 'Falling bolts! Yellow rings mark where they’ll land — get clear, or be in the air when they hit.' },
+    { pos: [0, 1, -34.5], radius: 3, text: 'Jump the spinning saw arm. The red glow shows where it’s heading next.' },
   ],
   decor: [
-    { kind: 'tree', pos: [-4, 0, 3.5] },
-    { kind: 'rock', pos: [4, 0, 3.5], scale: 1.2 },
-    { kind: 'lantern', pos: [-3.5, 1, -25.5] },
-    { kind: 'lantern', pos: [3.5, 1, -25.5] },
-    { kind: 'crystal', pos: [-3.6, 2.2, -64] },
-    { kind: 'statue', pos: [-3.6, 2.2, -91] },
-    { kind: 'statue', pos: [3.6, 2.2, -91] },
+    { kind: 'plant', pos: [-4, 0, 3.5] },
+    { kind: 'nut', pos: [4, 0, 3.5], scale: 1.2 },
+    { kind: 'candle', pos: [-3.5, 1, -25.5] },
+    { kind: 'candle', pos: [3.5, 1, -25.5] },
+    { kind: 'jar', pos: [-3.6, 2.2, -64] },
+    { kind: 'blocks', pos: [-3.6, 2.2, -91] },
+    { kind: 'blocks', pos: [3.6, 2.2, -91] },
   ],
 };
 
 const L5gate = twinPlateGate('g', -26, 0, 6, [-1.3, 0, -23.6], [1.3, 0, -28.2]);
 const L5 = {
   id: 'spire-gate',
-  name: 'The Spire Gate',
+  name: 'The Fuse Box',
   tagline: 'Everything they have learned, all at once.',
   spawn: [0, 0, 3],
   killY: -10,
@@ -263,22 +263,22 @@ const L5 = {
   ],
   checkpoints: [{ pos: [0, 0, -28.8] }, { pos: [0, 0, -49] }, { pos: [0, 3.6, -60] }],
   goal: { pos: [0, 3.6, -88] },
-  hints: [{ pos: [0, 0, 2.5], radius: 3, text: 'The Spire Gate. Everything you’ve learned — together.' }],
+  hints: [{ pos: [0, 0, 2.5], radius: 3, text: 'The Fuse Box. Everything you’ve learned — together.' }],
   decor: [
-    { kind: 'statue', pos: [-3.6, 0, 3.6] },
-    { kind: 'statue', pos: [3.6, 0, 3.6] },
-    { kind: 'lantern', pos: [-4.5, 0, -48] },
-    { kind: 'crystal', pos: [3.5, 3.6, -58.5] },
-    { kind: 'arch', pos: [0, 3.6, -89.5] },
-    { kind: 'banner', pos: [-4.5, 3.6, -83] },
-    { kind: 'banner', pos: [4.5, 3.6, -83] },
+    { kind: 'blocks', pos: [-3.6, 0, 3.6] },
+    { kind: 'blocks', pos: [3.6, 0, 3.6] },
+    { kind: 'candle', pos: [-4.5, 0, -48] },
+    { kind: 'jar', pos: [3.5, 3.6, -58.5] },
+    { kind: 'pencils', pos: [0, 3.6, -89.5] },
+    { kind: 'pennant', pos: [-4.5, 3.6, -83] },
+    { kind: 'pennant', pos: [4.5, 3.6, -83] },
   ],
 };
 
 const L6 = {
   id: 'iron-warden',
-  name: 'The Iron Warden',
-  tagline: 'Vorrak’s guardian bars the Spire.',
+  name: 'The Toolbox',
+  tagline: 'Cody’s toolbox remembers every time he forgot it in the rain.',
   boss: 'warden',
   camera: 'arena',
   spawn: [0, 0, 8.5],
@@ -287,13 +287,13 @@ const L6 = {
   checkpoints: [],
   gems: [],
   goal: null,
-  hints: [{ pos: [0, 0, 8.5], radius: 3, text: 'Stand on BOTH glowing runes at once to call down the lightning!' }],
+  hints: [{ pos: [0, 0, 8.5], radius: 3, text: 'Stand on BOTH power buttons at once to zap the Toolbox!' }],
   decor: [],
 };
 
 export const CHAPTER = {
   id: 1,
-  name: 'The Shattered Isles',
+  name: 'The Shed',
   levels: [L1, L2, L3, L4, L5, L6],
 };
 

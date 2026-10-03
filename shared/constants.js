@@ -71,17 +71,23 @@ export const BOSS = {
   ringWidth: 0.6,
 };
 
-export const CREATURE_TYPES = ['dragon', 'golem', 'slime', 'robot', 'cat'];
-export const COLOR_SWATCHES = ['#d4602f', '#e8c043', '#4a72d0', '#9aad35', '#5a6e96', '#f2b880', '#f5efe8'];
-export const DEFAULT_AVATARS = [
-  { type: 'dragon', color: '#d4602f' },
-  { type: 'golem', color: '#e8c043' },
-];
+// The two playable dolls. Each room has one of each; colour is fixed per character.
+export const CHARACTERS = {
+  may: { name: 'May', blurb: 'Wooden doll', color: '#3f7fd8' },
+  cody: { name: 'Cody', blurb: 'Clay doll', color: '#4f9e3f' },
+};
+export const CHARACTER_TYPES = Object.keys(CHARACTERS);
 
-export function isValidAvatarType(type) {
-  return CREATURE_TYPES.includes(type);
+export function avatarFor(type) {
+  return { type, color: CHARACTERS[type].color };
 }
 
-export function isValidColor(color) {
-  return typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color);
+export const DEFAULT_AVATARS = [avatarFor('may'), avatarFor('cody')];
+
+export function otherCharacter(type) {
+  return CHARACTER_TYPES.find((t) => t !== type);
+}
+
+export function isValidAvatarType(type) {
+  return CHARACTER_TYPES.includes(type);
 }

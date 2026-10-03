@@ -1,4 +1,4 @@
-import { CREATURE_TYPES, COLOR_SWATCHES } from '@shared/constants.js';
+import { CHARACTERS, CHARACTER_TYPES } from '@shared/constants.js';
 import { LEVELS } from '@shared/levels.js';
 import { CREATURES } from './render/creatures.js';
 
@@ -6,10 +6,11 @@ const CODE_CHARS = /[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g;
 const $ = (id) => document.getElementById(id);
 
 const EMBLEMS = {
-  aeris: `<svg viewBox="0 0 64 64" aria-hidden="true"><defs><radialGradient id="ae"><stop offset="0" stop-color="#fff"/><stop offset="0.45" stop-color="#a8c4ff"/><stop offset="1" stop-color="#a8c4ff" stop-opacity="0"/></radialGradient></defs><circle cx="32" cy="30" r="24" fill="url(#ae)"/><path d="M20 46c6 10 18 10 24 0" stroke="#c8d8ff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
-  vorrak: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M4 32C16 12 48 12 60 32C48 52 16 52 4 32Z" fill="#2a0d1a" stroke="#ff5d6c" stroke-width="3"/><circle cx="32" cy="32" r="11" fill="#ff5d6c"/><rect x="30" y="21" width="4" height="22" rx="2" fill="#1a0610"/></svg>`,
-  warden: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="12" width="44" height="40" rx="10" fill="#3d3530" stroke="#ffcf7a" stroke-width="3"/><rect x="16" y="28" width="32" height="7" rx="3" fill="#ff5a2e"/><path d="M32 2l5 10H27z" fill="#ffcf7a"/></svg>`,
-  narrator: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 16c8-4 16-4 24 2v32c-8-6-16-6-24-2z" fill="#f1e0c8"/><path d="M56 16c-8-4-16-4-24 2v32c8-6 16-6 24-2z" fill="#dcc3a0"/></svg>`,
+  // Dr. Hakim: the red Book of Love, with his moustache.
+  hakim: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="12" y="8" width="40" height="50" rx="6" fill="#c8323c"/><rect x="12" y="8" width="7" height="50" rx="3" fill="#8f1f2a"/><rect x="47" y="12" width="4" height="42" rx="2" fill="#fbf3e4"/><circle cx="28" cy="26" r="4" fill="#fff"/><circle cx="40" cy="26" r="4" fill="#fff"/><circle cx="29" cy="27" r="2" fill="#2a1712"/><circle cx="41" cy="27" r="2" fill="#2a1712"/><path d="M22 38c4-5 8-5 12-1 4-4 8-4 12 1-4 3-8 2-12-1-4 3-8 4-12 1z" fill="#2a1712"/><path d="M34 46c-3-4-8-1-5 3l5 4 5-4c3-4-2-7-5-3z" fill="#f6c94a"/></svg>`,
+  rose: `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="34" r="17" fill="#f2c39c"/><path d="M14 34c0-14 8-22 18-22s18 8 18 22c-3-8-9-12-18-12s-15 4-18 12z" fill="#5a3322"/><circle cx="13" cy="30" r="6" fill="#5a3322"/><circle cx="51" cy="30" r="6" fill="#5a3322"/><circle cx="26" cy="35" r="2.4" fill="#2a1712"/><circle cx="38" cy="35" r="2.4" fill="#2a1712"/><path d="M27 43c3 2 7 2 10 0" stroke="#a5452f" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="21" cy="40" r="3" fill="#ef8fae" opacity=".6"/><circle cx="43" cy="40" r="3" fill="#ef8fae" opacity=".6"/><path d="M44 12l3 4 5-1-3 4 2 4-5-2-3 4v-5l-4-2 5-1z" fill="#d9578f"/></svg>`,
+  toolbox: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M24 18v-6h16v6" stroke="#3a3330" stroke-width="5" fill="none" stroke-linejoin="round"/><rect x="8" y="18" width="48" height="36" rx="5" fill="#d9452f"/><rect x="8" y="18" width="48" height="10" rx="4" fill="#b2321f"/><rect x="28" y="24" width="8" height="8" rx="2" fill="#f2c94c"/><path d="M18 38l8 3M46 38l-8 3" stroke="#2a1712" stroke-width="3" stroke-linecap="round"/><circle cx="23" cy="44" r="3" fill="#fff4d8"/><circle cx="41" cy="44" r="3" fill="#fff4d8"/></svg>`,
+  narrator: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 16c8-4 16-4 24 2v32c-8-6-16-6-24-2z" fill="#fbf3e4" stroke="#7a5a3c" stroke-width="2"/><path d="M56 16c-8-4-16-4-24 2v32c8-6 16-6 24-2z" fill="#f0e2c6" stroke="#7a5a3c" stroke-width="2"/><path d="M32 30c-2-3-6-1-4 2l4 3 4-3c2-3-2-5-4-2z" fill="#c8323c"/></svg>`,
 };
 
 function escapeHtml(text) {
@@ -54,7 +55,7 @@ export function createUI({ portraits, audio, on }) {
   }
 
   document.addEventListener('click', (e) => {
-    if (e.target.closest('button:not(.creature-btn):not(.swatch):not(.level-card)')) audio.click();
+    if (e.target.closest('button:not(.creature-btn):not(.level-card)')) audio.click();
   });
 
   // ---------- menu ----------
@@ -103,7 +104,7 @@ export function createUI({ portraits, audio, on }) {
 
   // ---------- lobby ----------
 
-  const creatureButtons = CREATURE_TYPES.map((type) => {
+  const creatureButtons = CHARACTER_TYPES.map((type) => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'creature-btn';
@@ -111,27 +112,12 @@ export function createUI({ portraits, audio, on }) {
     btn.dataset.type = type;
     btn.title = CREATURES[type].blurb;
     btn.setAttribute('aria-label', `${CREATURES[type].label} — ${CREATURES[type].blurb}`);
-    btn.innerHTML = `<img alt="" /><span>${CREATURES[type].label}</span>`;
+    btn.innerHTML = `<img alt="" /><span>${CREATURES[type].label}</span><small>${CREATURES[type].blurb}</small>`;
     btn.addEventListener('click', () => {
       audio.select();
       on.pickCreature(type);
     });
     $('creature-grid').appendChild(btn);
-    return btn;
-  });
-  const swatches = COLOR_SWATCHES.map((color) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'swatch';
-    btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-label', `Color ${color}`);
-    btn.style.setProperty('--swatch', color);
-    btn.dataset.color = color;
-    btn.addEventListener('click', () => {
-      audio.select();
-      on.pickColor(color);
-    });
-    $('color-grid').appendChild(btn);
     return btn;
   });
 
@@ -180,10 +166,11 @@ export function createUI({ portraits, audio, on }) {
     renderSlot($('slot-mate'), mate, mate && !isHost ? 'Teammate · host' : 'Teammate', 'Waiting to join…');
     if (me) {
       for (const btn of creatureButtons) {
-        btn.setAttribute('aria-checked', String(btn.dataset.type === me.avatar.type));
-        btn.querySelector('img').src = portraits.get({ type: btn.dataset.type, color: me.avatar.color });
+        const type = btn.dataset.type;
+        btn.setAttribute('aria-checked', String(type === me.avatar.type));
+        btn.style.setProperty('--accent', CHARACTERS[type].color);
+        btn.querySelector('img').src = portraits.get({ type, color: CHARACTERS[type].color });
       }
-      for (const btn of swatches) btn.setAttribute('aria-checked', String(btn.dataset.color === me.avatar.color));
     }
 
     levelButtons.forEach((btn, i) => {
@@ -194,9 +181,9 @@ export function createUI({ portraits, audio, on }) {
       btn.classList.toggle('is-locked', locked);
       btn.disabled = locked || !isHost;
       btn.setAttribute('aria-pressed', String(i === levelIndex));
-      btn.innerHTML = `<span class="level-num">${locked ? '🔒' : def.boss ? '⚔' : i + 1}</span>
+      btn.innerHTML = `<span class="level-num">${locked ? '🔒' : def.boss ? '★' : i + 1}</span>
         <span><span class="level-name">${escapeHtml(def.name)}</span><span class="level-sub">${locked ? 'Locked' : escapeHtml(def.tagline)}</span></span>
-        <span class="shards" aria-label="${got} of ${total} shards">${total ? shardRow(got, total) : ''}</span>`;
+        <span class="shards" aria-label="${got} of ${total} hearts">${total ? shardRow(got, total) : ''}</span>`;
     });
 
     const start = $('start-btn');

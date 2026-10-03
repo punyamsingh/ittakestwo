@@ -242,7 +242,7 @@ describe('co-op mechanics in real level layouts', () => {
   });
 });
 
-describe('the Iron Warden', () => {
+describe('the Toolbox (boss)', () => {
   test('standing on both runes at once strikes it; three strikes defeat it', () => {
     let seed = 5;
     const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -261,7 +261,7 @@ describe('the Iron Warden', () => {
     assert.equal(s.done, true);
   });
 
-  test('its attacks punish guardians who stand still', () => {
+  test('its attacks punish dolls who stand still', () => {
     const { s, of } = sim('iron-warden');
     run(s, 40);
     assert.ok(of('hit').length > 0);

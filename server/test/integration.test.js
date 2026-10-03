@@ -157,21 +157,36 @@ describe('room lifecycle over the wire', () => {
     assert.match(err.message, /not found/i);
   });
 
-  withServer('set-avatar rejects unknown type/color and keeps prior value', async ({ connect }) => {
+  withServer('set-avatar rejects unknown dolls and fixes colour to the doll', async ({ connect }) => {
     const host = await connect();
     host.emit('create-room');
     await host.next('room-created');
-    host.emit('set-avatar', { type: 'dragon-lord', color: 'not-a-color' });
-    host.emit('set-avatar', { type: 'slime', color: '#00ff00' });
-    await host.next('lobby-update', (l) => l.players[0].avatar.type === 'slime');
+    host.emit('set-avatar', { type: 'dragon', color: 'not-a-color' });
+    host.emit('set-avatar', { type: 'cody', color: '#00ff00' });
+    await host.next('lobby-update', (l) => l.players[0].avatar.type === 'cody');
     const updates = host.allSeen('lobby-update');
-    for (const l of updates.slice(0, -1)) assert.deepEqual(l.players[0].avatar, { type: 'dragon', color: '#d4602f' });
-    assert.deepEqual(updates.at(-1).players[0].avatar, { type: 'slime', color: '#00ff00' });
+    for (const l of updates.slice(0, -1)) assert.deepEqual(l.players[0].avatar, { type: 'may', color: '#3f7fd8' });
+    assert.deepEqual(updates.at(-1).players[0].avatar, { type: 'cody', color: '#4f9e3f' });
+  });
+
+  withServer('a joining player gets the free doll, and picking the partner’s doll swaps', async ({ connect }) => {
+    const host = await connect();
+    host.emit('create-room');
+    const { code } = await host.next('room-created');
+    host.emit('set-avatar', { type: 'cody' });
+    await host.next('lobby-update', (l) => l.players[0].avatar.type === 'cody');
+    const guest = await connect();
+    guest.emit('join-room', { code });
+    const joined = await host.next('lobby-update', (l) => l.players.length === 2);
+    assert.deepEqual(joined.players.map((p) => p.avatar.type), ['cody', 'may']);
+    guest.emit('set-avatar', { type: 'cody' });
+    const swapped = await host.next('lobby-update', (l) => l.players[1]?.avatar.type === 'cody');
+    assert.deepEqual(swapped.players.map((p) => p.avatar.type), ['may', 'cody']);
   });
 
   withServer('set-avatar before joining any room is ignored', async ({ connect }) => {
     const c = await connect();
-    c.emit('set-avatar', { type: 'slime', color: '#00ff00' });
+    c.emit('set-avatar', { type: 'cody' });
     await c.expectNone('lobby-update');
   });
 });
@@ -288,7 +303,7 @@ describe('campaign flow over the wire', () => {
   withServer('avatar changes are ignored while a level is running', async ({ connect }) => {
     const { host, guest } = await setupRoom(connect);
     await startLevel(host, guest);
-    guest.emit('set-avatar', { type: 'robot', color: '#123456' });
+    guest.emit('set-avatar', { type: 'may' });
     await host.expectNone('lobby-update', 200);
   });
 

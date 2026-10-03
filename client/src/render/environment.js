@@ -1,40 +1,24 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { BOSS } from '@shared/constants.js';
+import { textures } from './textures.js';
+import { heartGeometry } from './platforms.js';
 
 const ARENA_RADIUS = 12;
-import { textures } from './textures.js';
 
+// Chapter one takes place inside the family shed, seen from doll height:
+// sunlit dust, warm pine, and everything enormous.
 const PALETTE = {
-  skyTop: new THREE.Color('#1b2033'),
-  skyMid: new THREE.Color('#59556b'),
-  horizon: new THREE.Color('#f0a860'),
-  below: new THREE.Color('#4a2a18'),
-  sun: new THREE.Color('#ffd08a'),
-  cloudLit: new THREE.Color('#ffd6a8'),
-  cloudShade: new THREE.Color('#6a5a6e'),
-  fog: new THREE.Color('#9e7a62'),
+  fog: new THREE.Color('#d8b98e'),
+  sky: new THREE.Color('#9fd3f2'),
+  skyLow: new THREE.Color('#e8f4ff'),
+  sun: new THREE.Color('#fff2cf'),
+  wall: '#b98656',
+  floor: '#8f6038',
 };
 
-// ---------- small deterministic noise helpers ----------
-
-function hash2(x, y) {
-  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-  return s - Math.floor(s);
-}
-
-function noise2(x, y) {
-  const xi = Math.floor(x);
-  const yi = Math.floor(y);
-  const xf = x - xi;
-  const yf = y - yi;
-  const u = xf * xf * (3 - 2 * xf);
-  const v = yf * yf * (3 - 2 * yf);
-  const a = hash2(xi, yi);
-  const b = hash2(xi + 1, yi);
-  const c = hash2(xi, yi + 1);
-  const d = hash2(xi + 1, yi + 1);
-  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
-}
+// The room: everything at doll scale, so a paint tin is a tower.
+const ROOM = { x: 170, zNear: 160, zFar: -300, floor: -34, ceil: 150 };
 
 function seededRandom(seed) {
   let s = seed;
@@ -44,122 +28,335 @@ function seededRandom(seed) {
   };
 }
 
-const NOISE_GLSL = /* glsl */ `
-  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-  float vnoise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+function canvasRepeat(w, h, draw, repeat = [1, 1]) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(...repeat);
+  tex.anisotropy = 8;
+  return tex;
+}
+
+// Wide boards with dark gaps, used for the shed's walls and floor.
+function boardTexture(base, rand, boards = 8, repeat = [1, 1]) {
+  return canvasRepeat(
+    512,
+    512,
+    (ctx, w, h) => {
+      const col = new THREE.Color(base);
+      const bw = w / boards;
+      for (let i = 0; i < boards; i++) {
+        const t = col.clone().offsetHSL(0, 0, (rand() - 0.5) * 0.08);
+        ctx.fillStyle = `#${t.getHexString()}`;
+        ctx.fillRect(i * bw, 0, bw, h);
+        for (let k = 0; k < 14; k++) {
+          ctx.strokeStyle = `rgba(60, 30, 10, ${0.04 + rand() * 0.08})`;
+          ctx.lineWidth = 1 + rand() * 2;
+          const x0 = i * bw + rand() * bw;
+          ctx.beginPath();
+          ctx.moveTo(x0, 0);
+          for (let y = 0; y <= h; y += 24) ctx.lineTo(x0 + Math.sin(y * 0.02 + k) * 4, y);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(40, 20, 8, 0.7)';
+        ctx.fillRect(i * bw, 0, 4, h);
+        // nail heads
+        ctx.fillStyle = 'rgba(50, 45, 40, 0.8)';
+        for (const y of [h * 0.12, h * 0.88]) {
+          ctx.beginPath();
+          ctx.arc(i * bw + bw / 2, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    },
+    repeat
+  );
+}
+
+// ---------- the room ----------
+
+function buildRoom(scene, rand) {
+  const group = new THREE.Group();
+  const width = ROOM.x * 2;
+  const depth = ROOM.zNear - ROOM.zFar;
+  const height = ROOM.ceil - ROOM.floor;
+  const cz = (ROOM.zNear + ROOM.zFar) / 2;
+
+  const wallTex = boardTexture(PALETTE.wall, rand, 10, [6, 3]);
+  const wallMat = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.9 });
+  const sideTex = wallTex.clone();
+  sideTex.repeat.set(8, 3);
+  sideTex.needsUpdate = true;
+  const sideMat = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.9 });
+
+  const floorTex = boardTexture(PALETTE.floor, rand, 6, [10, 14]);
+  floorTex.rotation = Math.PI / 2;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.95 }));
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(0, ROOM.floor, cz);
+  floor.receiveShadow = true;
+
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wallMat);
+  back.position.set(0, ROOM.floor + height / 2, ROOM.zFar);
+  const front = back.clone();
+  front.rotation.y = Math.PI;
+  front.position.z = ROOM.zNear;
+  const left = new THREE.Mesh(new THREE.PlaneGeometry(depth, height), sideMat);
+  left.rotation.y = Math.PI / 2;
+  left.position.set(-ROOM.x, ROOM.floor + height / 2, cz);
+  const right = left.clone();
+  right.rotation.y = -Math.PI / 2;
+  right.position.x = ROOM.x;
+
+  const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), new THREE.MeshStandardMaterial({ color: '#6e4a2c', roughness: 1 }));
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.set(0, ROOM.ceil, cz);
+
+  // Rafters across the roof.
+  const beamMat = new THREE.MeshStandardMaterial({ color: '#7a5130', roughness: 0.9 });
+  for (let z = ROOM.zNear - 40; z > ROOM.zFar; z -= 70) {
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(width, 8, 8), beamMat);
+    beam.position.set(0, ROOM.ceil - 10, z);
+    group.add(beam);
   }
-  float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    for (int i = 0; i < 5; i++) {
-      v += a * vnoise(p);
-      p = p * 2.03 + vec2(17.3, 9.1);
-      a *= 0.5;
+
+  group.add(floor, back, front, left, right, ceiling);
+  scene.add(group);
+  return group;
+}
+
+// The sunlit window on the back wall, with crossbars and a crack in one pane.
+function buildWindow(scene) {
+  const g = new THREE.Group();
+  const w = 120;
+  const h = 80;
+  const sky = canvasRepeat(256, 256, (ctx, cw, ch) => {
+    const grad = ctx.createLinearGradient(0, 0, 0, ch);
+    grad.addColorStop(0, '#7fc3ee');
+    grad.addColorStop(0.65, '#cfe9fb');
+    grad.addColorStop(1, '#f6fbff');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, cw, ch);
+    // soft clouds
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for (const [x, y, r] of [
+      [50, 70, 22],
+      [75, 64, 28],
+      [100, 72, 20],
+      [180, 110, 18],
+      [200, 104, 24],
+      [222, 112, 16],
+    ]) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
     }
-    return v;
+    // the garden hedge along the bottom
+    ctx.fillStyle = '#6fae4f';
+    for (let x = 0; x < cw; x += 18) {
+      ctx.beginPath();
+      ctx.arc(x, ch - 18, 22, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: sky, fog: false, toneMapped: false }));
+  g.add(pane);
+
+  const frameMat = new THREE.MeshStandardMaterial({ color: '#f3ede2', roughness: 0.6 });
+  const bar = (bw, bh, x, y) => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 4), frameMat);
+    m.position.set(x, y, 2);
+    g.add(m);
+  };
+  bar(w + 8, 6, 0, h / 2 + 1);
+  bar(w + 8, 6, 0, -h / 2 - 1);
+  bar(6, h + 8, -w / 2 - 1, 0);
+  bar(6, h + 8, w / 2 + 1, 0);
+  bar(w, 3.5, 0, 0);
+  bar(3.5, h, 0, 0);
+  // Sill.
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(w + 20, 3, 12), frameMat);
+  sill.position.set(0, -h / 2 - 4, 6);
+  g.add(sill);
+
+  // The cracked pane the draft blows through.
+  const crack = new THREE.Mesh(
+    new THREE.PlaneGeometry(w / 2 - 4, h / 2 - 4),
+    new THREE.MeshBasicMaterial({
+      map: canvasRepeat(128, 128, (ctx) => {
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 7; i++) {
+          const a = (i / 7) * Math.PI * 2;
+          ctx.beginPath();
+          ctx.moveTo(84, 40);
+          ctx.lineTo(84 + Math.cos(a) * 60, 40 + Math.sin(a) * 60);
+          ctx.stroke();
+        }
+      }),
+      transparent: true,
+      fog: false,
+      depthWrite: false,
+    })
+  );
+  crack.position.set(w / 4, h / 4, 0.5);
+  g.add(crack);
+
+  g.position.set(30, 62, ROOM.zFar + 1);
+  scene.add(g);
+
+  // Sun shafts slanting in from the window.
+  const shaftTex = canvasRepeat(64, 256, (ctx, cw, ch) => {
+    const grad = ctx.createLinearGradient(0, 0, 0, ch);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, cw, ch);
+    const side = ctx.createLinearGradient(0, 0, cw, 0);
+    side.addColorStop(0, 'rgba(0,0,0,1)');
+    side.addColorStop(0.3, 'rgba(0,0,0,0)');
+    side.addColorStop(0.7, 'rgba(0,0,0,0)');
+    side.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = side;
+    ctx.fillRect(0, 0, cw, ch);
+  });
+  const shafts = [];
+  [
+    [-28, 0],
+    [8, 0.6],
+    [44, 1.3],
+    [72, 2],
+  ].forEach(([x, phase]) => {
+    const mat = new THREE.MeshBasicMaterial({
+      map: shaftTex,
+      color: PALETTE.sun,
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      fog: false,
+    });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(26, 260), mat);
+    m.position.set(x, 30, ROOM.zFar + 120);
+    m.rotation.set(-1.05, 0, 0.12);
+    m.userData.phase = phase;
+    scene.add(m);
+    shafts.push(m);
+  });
+  return shafts;
+}
+
+// Giant shelving, tins and tools around the edges of the room.
+function buildShedProps(scene, rand) {
+  const g = new THREE.Group();
+  const wood = new THREE.MeshStandardMaterial({ color: '#a8733f', roughness: 0.85 });
+  const tinColors = ['#3f7fd8', '#e0563f', '#f2c94c', '#4f9e3f', '#d9578f', '#f3ede2'];
+  const steel = new THREE.MeshStandardMaterial({ color: '#b9b4ab', roughness: 0.35, metalness: 0.6 });
+
+  // Wall shelves on both sides, stacked with tins and jars.
+  for (const side of [-1, 1]) {
+    for (let level = 0; level < 3; level++) {
+      const y = ROOM.floor + 30 + level * 42;
+      const shelf = new THREE.Mesh(new THREE.BoxGeometry(34, 3, 260), wood);
+      shelf.position.set(side * (ROOM.x - 17), y, -70);
+      shelf.receiveShadow = true;
+      g.add(shelf);
+      for (let z = -190; z < 50; z += 22 + rand() * 18) {
+        const r = 6 + rand() * 5;
+        const hgt = 12 + rand() * 14;
+        const tin = new THREE.Mesh(new THREE.CylinderGeometry(r, r, hgt, 24), steel);
+        tin.position.set(side * (ROOM.x - 14 - rand() * 6), y + 1.5 + hgt / 2, z);
+        const label = new THREE.Mesh(
+          new THREE.CylinderGeometry(r + 0.1, r + 0.1, hgt * 0.6, 24, 1, true),
+          new THREE.MeshStandardMaterial({ color: tinColors[Math.floor(rand() * tinColors.length)], roughness: 0.7 })
+        );
+        label.position.copy(tin.position);
+        g.add(tin, label);
+      }
+    }
   }
-`;
 
-// ---------- sky + clouds ----------
+  // A pegboard behind the level with a hammer and a saw hanging on it.
+  const board = new THREE.Mesh(
+    new THREE.PlaneGeometry(120, 70),
+    new THREE.MeshStandardMaterial({
+      color: '#c9a273',
+      roughness: 0.95,
+      map: canvasRepeat(
+        128,
+        128,
+        (ctx, w, h) => {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = 'rgba(60, 35, 15, 0.55)';
+          for (let x = 8; x < w; x += 16) for (let y = 8; y < h; y += 16) {
+            ctx.beginPath();
+            ctx.arc(x, y, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        },
+        [6, 3.5]
+      ),
+    })
+  );
+  board.position.set(-75, 50, ROOM.zFar + 2);
+  g.add(board);
+  const handle = new THREE.MeshStandardMaterial({ color: '#c8323c', roughness: 0.5 });
+  const hammer = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 44, 12), handle);
+  const head = new THREE.Mesh(new RoundedBoxGeometry(22, 8, 8, 2, 1.5), steel);
+  head.position.y = 24;
+  hammer.add(shaft, head);
+  hammer.position.set(-100, 48, ROOM.zFar + 8);
+  hammer.rotation.z = 0.2;
+  const saw = new THREE.Group();
+  const blade = new THREE.Mesh(new THREE.BoxGeometry(56, 16, 0.6), steel);
+  const grip = new THREE.Mesh(new RoundedBoxGeometry(14, 16, 4, 2, 2), wood);
+  grip.position.x = 33;
+  saw.add(blade, grip);
+  saw.position.set(-58, 58, ROOM.zFar + 6);
+  saw.rotation.z = -0.1;
+  g.add(hammer, saw);
 
-function buildSky(scene, sunDir) {
-  const mat = new THREE.ShaderMaterial({
-    side: THREE.BackSide,
-    depthWrite: false,
-    fog: false,
-    uniforms: {
-      uTop: { value: PALETTE.skyTop },
-      uMid: { value: PALETTE.skyMid },
-      uHorizon: { value: PALETTE.horizon },
-      uBelow: { value: PALETTE.below },
-      uSun: { value: PALETTE.sun },
-      uSunDir: { value: sunDir },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vDir;
-      void main() {
-        vDir = normalize(position);
-        vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        gl_Position = p.xyww;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uTop, uMid, uHorizon, uBelow, uSun, uSunDir;
-      varying vec3 vDir;
-      void main() {
-        vec3 d = normalize(vDir);
-        float h = d.y;
-        vec3 col = mix(uHorizon, uMid, smoothstep(0.0, 0.28, h));
-        col = mix(col, uTop, smoothstep(0.22, 0.9, h));
-        col = mix(col, uBelow, smoothstep(0.0, -0.25, h));
-        float s = max(dot(d, uSunDir), 0.0);
-        col += uSun * (pow(s, 900.0) * 8.0 + pow(s, 24.0) * 0.55 + pow(s, 4.0) * 0.18);
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `,
-  });
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(500, 32, 16), mat);
-  sky.renderOrder = -10;
-  sky.frustumCulled = false;
-  scene.add(sky);
+  // A hanging bulb from the rafters.
+  const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 60, 6), new THREE.MeshStandardMaterial({ color: '#2d2a26' }));
+  cord.position.set(-40, ROOM.ceil - 40, -140);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(5, 20, 16), new THREE.MeshStandardMaterial({ color: '#fff6dc', emissive: '#ffd27a', emissiveIntensity: 2.2 }));
+  bulb.position.set(-40, ROOM.ceil - 74, -140);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#ffd27a', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
+  halo.position.copy(bulb.position);
+  halo.scale.setScalar(40);
+  g.add(cord, bulb, halo);
+
+  // Enormous paint tins standing on the floor, far below the play area.
+  for (let i = 0; i < 10; i++) {
+    const r = 10 + rand() * 8;
+    const hgt = 24 + rand() * 12;
+    const ang = rand() * Math.PI * 2;
+    const dist = 110 + rand() * 60;
+    const x = Math.cos(ang) * dist;
+    const z = -45 + Math.sin(ang) * dist;
+    const tin = new THREE.Mesh(new THREE.CylinderGeometry(r, r, hgt, 28), steel);
+    tin.position.set(x, ROOM.floor + hgt / 2, z);
+    const label = new THREE.Mesh(
+      new THREE.CylinderGeometry(r + 0.15, r + 0.15, hgt * 0.6, 28, 1, true),
+      new THREE.MeshStandardMaterial({ color: tinColors[i % tinColors.length], roughness: 0.7 })
+    );
+    label.position.copy(tin.position);
+    g.add(tin, label);
+  }
+
+  scene.add(g);
+  return g;
 }
 
-function buildCloudLayer(scene, { y, scale, speed, coverage, alpha, lit, shade }) {
-  const mat = new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    fog: false,
-    uniforms: {
-      uTime: { value: 0 },
-      uLit: { value: lit },
-      uShade: { value: shade },
-      uFar: { value: PALETTE.horizon.clone().lerp(PALETTE.below, 0.35) },
-      uScale: { value: scale },
-      uSpeed: { value: speed },
-      uCoverage: { value: coverage },
-      uAlpha: { value: alpha },
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vWorld;
-      void main() {
-        vec4 w = modelMatrix * vec4(position, 1.0);
-        vWorld = w.xyz;
-        gl_Position = projectionMatrix * viewMatrix * w;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime, uScale, uSpeed, uCoverage, uAlpha;
-      uniform vec3 uLit, uShade, uFar;
-      varying vec3 vWorld;
-      ${NOISE_GLSL}
-      void main() {
-        vec2 p = vWorld.xz * uScale;
-        float n = fbm(p + vec2(uTime * uSpeed, uTime * uSpeed * 0.4));
-        float n2 = fbm(p * 2.3 - vec2(uTime * uSpeed * 1.6, 0.0));
-        float d = n * 0.7 + n2 * 0.3;
-        float a = smoothstep(uCoverage, uCoverage + 0.28, d);
-        vec3 col = mix(uShade, uLit, smoothstep(uCoverage, uCoverage + 0.45, d));
-        float dist = length(vWorld.xz);
-        float far = smoothstep(90.0, 300.0, dist);
-        col = mix(col, uFar, far);
-        a = mix(a * uAlpha, 1.0, far) * (1.0 - smoothstep(380.0, 480.0, dist));
-        gl_FragColor = vec4(col, a);
-      }
-    `,
-  });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), mat);
-  mesh.rotation.x = -Math.PI / 2;
-  mesh.position.y = y;
-  mesh.renderOrder = -5;
-  scene.add(mesh);
-  return mat;
-}
-
-// ---------- the arena ----------
+// ---------- the arena: the seat of an old wooden stool ----------
 
 function sectorShape(r0, r1, a0, a1) {
   const s = new THREE.Shape();
@@ -176,40 +373,39 @@ const TILE_BEVEL = 0.045;
 
 function tileRing(r0, r1, count, colors, rand, offset) {
   const span = (Math.PI * 2) / count;
-  const gap = 0.09 / ((r0 + r1) / 2);
-  const geo = new THREE.ExtrudeGeometry(sectorShape(r0 + 0.04, r1 - 0.04, gap / 2, span - gap / 2), {
+  const gap = 0.07 / ((r0 + r1) / 2);
+  const geo = new THREE.ExtrudeGeometry(sectorShape(r0 + 0.03, r1 - 0.03, gap / 2, span - gap / 2), {
     depth: TILE_DEPTH,
     bevelEnabled: true,
     bevelThickness: TILE_BEVEL,
-    bevelSize: 0.035,
+    bevelSize: 0.03,
     bevelSegments: 2,
     curveSegments: Math.max(4, Math.round(12 * (span / 0.6))),
   });
   geo.rotateX(Math.PI / 2);
   geo.translate(0, -TILE_BEVEL, 0);
 
-  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.82, metalness: 0 });
+  const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.75, metalness: 0 });
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const c = new THREE.Color();
   for (let i = 0; i < count; i++) {
     q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), i * span + offset);
-    m.compose(new THREE.Vector3(0, -rand() * 0.025, 0), q, new THREE.Vector3(1, 1, 1));
+    m.compose(new THREE.Vector3(0, -rand() * 0.02, 0), q, new THREE.Vector3(1, 1, 1));
     mesh.setMatrixAt(i, m);
     c.copy(colors[Math.floor(rand() * colors.length)]).offsetHSL(0, 0, (rand() - 0.5) * 0.05);
     mesh.setColorAt(i, c);
   }
   mesh.receiveShadow = true;
-  mesh.castShadow = false;
   return mesh;
 }
 
 function buildArena(scene, rand) {
   const group = new THREE.Group();
-  const sand = ['#e6c091', '#dcb183', '#ecca9c', '#d8a978'].map((h) => new THREE.Color(h));
-  const sandDeep = ['#cf9f72', '#c79466', '#d6a87a'].map((h) => new THREE.Color(h));
-  const clay = ['#c9785a', '#bd6b50', '#d38566'].map((h) => new THREE.Color(h));
+  const pine = ['#d9ad78', '#cf9f6a', '#e3b984', '#c99560'].map((h) => new THREE.Color(h));
+  const pineDeep = ['#b9824e', '#ad7646', '#c48d58'].map((h) => new THREE.Color(h));
+  const paint = ['#3f7fd8', '#3a74c8', '#4686e0'].map((h) => new THREE.Color(h));
   const rings = [
     [1.0, 3.1, 10],
     [3.1, 5.3, 16],
@@ -218,196 +414,46 @@ function buildArena(scene, rand) {
     [BOSS.armReach - 1.15, ARENA_RADIUS, 36],
   ];
   rings.forEach(([r0, r1, n], i) => {
-    const colors = i === rings.length - 1 ? clay : i % 2 ? sandDeep : sand;
+    // The stool's outer ring is painted, chipped blue.
+    const colors = i === rings.length - 1 ? paint : i % 2 ? pineDeep : pine;
     group.add(tileRing(r0, r1, n, colors, rand, i * 0.37));
   });
 
-  // Grout bed under the tiles.
-  const bed = new THREE.Mesh(
-    new THREE.CylinderGeometry(ARENA_RADIUS + 0.05, ARENA_RADIUS + 0.05, 0.3, 96),
-    new THREE.MeshStandardMaterial({ color: '#2a160c', roughness: 1 })
-  );
-  bed.position.y = -0.2;
-  bed.receiveShadow = true;
-  group.add(bed);
+  const seat = new THREE.Mesh(new THREE.CylinderGeometry(ARENA_RADIUS + 0.05, ARENA_RADIUS - 0.4, 1.4, 96), new THREE.MeshStandardMaterial({ color: '#8f5f34', roughness: 0.85 }));
+  seat.position.y = -0.85;
+  seat.receiveShadow = true;
+  group.add(seat);
 
-  // Gold inlay ring and gold trim at the rim.
-  const gold = new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 1.1, roughness: 0.35, metalness: 0.6 });
-  const inlay = new THREE.Mesh(new THREE.RingGeometry(BOSS.armReach - 1.36, BOSS.armReach - 1.2, 128), gold);
+  // Painted heart-red inlay ring and a brass rim.
+  const inlay = new THREE.Mesh(new THREE.RingGeometry(BOSS.armReach - 1.36, BOSS.armReach - 1.2, 128), new THREE.MeshStandardMaterial({ color: '#d8314a', roughness: 0.5 }));
   inlay.rotation.x = -Math.PI / 2;
   inlay.position.y = -0.005;
   group.add(inlay);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(ARENA_RADIUS + 0.05, 0.07, 8, 160), gold);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(ARENA_RADIUS + 0.05, 0.08, 8, 160), new THREE.MeshStandardMaterial({ color: '#e8c060', roughness: 0.35, metalness: 0.8 }));
   rim.rotation.x = Math.PI / 2;
   rim.position.y = -0.04;
   group.add(rim);
 
-  group.add(buildUnderside(rand));
+  // Three splayed legs down to the shed floor, joined by a ring rail.
+  const legMat = new THREE.MeshStandardMaterial({ color: '#8f5f34', roughness: 0.85 });
+  const legLen = 36;
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2 + 0.5;
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, legLen, 12), legMat);
+    leg.position.set(Math.cos(a) * 9, -1.5 - legLen / 2, Math.sin(a) * 9);
+    leg.rotation.set(Math.sin(a) * 0.12, 0, -Math.cos(a) * 0.12);
+    group.add(leg);
+  }
+  const rail = new THREE.Mesh(new THREE.TorusGeometry(10.6, 0.5, 8, 64), legMat);
+  rail.rotation.x = Math.PI / 2;
+  rail.position.y = -16;
+  group.add(rail);
+
   scene.add(group);
   return group;
 }
 
-function buildUnderside(rand) {
-  const R = ARENA_RADIUS + 0.3;
-  const profile = [
-    [R, -0.33],
-    [R + 0.25, -0.7],
-    [R - 0.2, -1.4],
-    [R - 1.6, -2.5],
-    [R - 3.6, -3.9],
-    [R - 6.0, -5.8],
-    [R - 8.4, -8.0],
-    [R - 10.4, -10.6],
-    [0.2, -13.2],
-  ].map(([x, y]) => new THREE.Vector2(x, y));
-  const geo = new THREE.LatheGeometry(profile, 56);
-  const pos = geo.attributes.position;
-  const colors = new Float32Array(pos.count * 3);
-  const moss = new THREE.Color('#8a9a2e');
-  const mossDark = new THREE.Color('#5a6620');
-  const rockTop = new THREE.Color('#8a5a3a');
-  const rockLow = new THREE.Color('#38190c');
-  const c = new THREE.Color();
-  const v = new THREE.Vector3();
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i);
-    const ang = Math.atan2(v.z, v.x);
-    if (v.y < -0.5) {
-      const n = noise2(ang * 4, v.y * 0.6) - 0.5;
-      const push = 1 + n * 0.22;
-      v.x *= push;
-      v.z *= push;
-      v.y += (noise2(ang * 7, v.y) - 0.5) * 0.6;
-    }
-    const mossLine = -0.9 - noise2(ang * 9, 3) * 0.9;
-    if (v.y > mossLine) {
-      c.copy(moss).lerp(mossDark, noise2(ang * 11, v.y * 3));
-    } else {
-      const t = THREE.MathUtils.clamp(-v.y / 13, 0, 1);
-      c.copy(rockTop).lerp(rockLow, t).offsetHSL(0, 0, (noise2(ang * 5, v.y) - 0.5) * 0.06);
-    }
-    pos.setXYZ(i, v.x, v.y, v.z);
-    colors[i * 3] = c.r;
-    colors[i * 3 + 1] = c.g;
-    colors[i * 3 + 2] = c.b;
-  }
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  geo.computeVertexNormals();
-  const rock = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, flatShading: true }));
-  rock.receiveShadow = true;
-
-  const group = new THREE.Group();
-  group.add(rock);
-
-  // Glowing crystal clusters poking out of the rock.
-  const crystalMat = new THREE.MeshStandardMaterial({ color: '#a8c4ff', emissive: '#4066c6', emissiveIntensity: 2.4, roughness: 0.2 });
-  const crystalGeo = new THREE.OctahedronGeometry(0.5, 0);
-  for (let i = 0; i < 9; i++) {
-    const ang = (i / 9) * Math.PI * 2 + rand() * 0.4;
-    const depth = 1.6 + rand() * 6;
-    const radius = (R - 1) * (1 - depth / 14) + 0.2;
-    const cluster = new THREE.Group();
-    for (let k = 0; k < 3; k++) {
-      const cr = new THREE.Mesh(crystalGeo, crystalMat);
-      cr.scale.set(0.35 + rand() * 0.25, 0.9 + rand() * 1.1, 0.35 + rand() * 0.25);
-      cr.position.set((rand() - 0.5) * 0.5, 0, (rand() - 0.5) * 0.5);
-      cr.rotation.set((rand() - 0.5) * 0.8, rand() * Math.PI, (rand() - 0.5) * 0.8);
-      cluster.add(cr);
-    }
-    cluster.position.set(Math.cos(ang) * radius, -depth, Math.sin(ang) * radius);
-    cluster.lookAt(Math.cos(ang) * (radius + 3), -depth - 1.5, Math.sin(ang) * (radius + 3));
-    cluster.rotateX(Math.PI / 2);
-    group.add(cluster);
-  }
-  return group;
-}
-
-// ---------- scenery ----------
-
-function buildLanterns(group, rand) {
-  const lanterns = [];
-  const bodyGeo = new THREE.CylinderGeometry(0.24, 0.2, 0.46, 10);
-  const capGeo = new THREE.CylinderGeometry(0.13, 0.26, 0.1, 10);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: '#ffd29a', emissive: '#ff9a3c', emissiveIntensity: 2.6, roughness: 0.6 });
-  const capMat = new THREE.MeshStandardMaterial({ color: '#3a2214', roughness: 0.7 });
-  const halo = new THREE.SpriteMaterial({ map: textures().glow, color: '#ff9d52', transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending });
-  for (let i = 0; i < 14; i++) {
-    const g = new THREE.Group();
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    const top = new THREE.Mesh(capGeo, capMat);
-    top.position.y = 0.28;
-    const bottom = new THREE.Mesh(capGeo, capMat);
-    bottom.position.y = -0.28;
-    bottom.rotation.x = Math.PI;
-    const glow = new THREE.Sprite(halo);
-    glow.scale.setScalar(1.8);
-    g.add(body, top, bottom, glow);
-    const ang = (i / 14) * Math.PI * 2 + rand() * 0.25;
-    const r = ARENA_RADIUS + 2.2 + rand() * 2.5;
-    g.position.set(Math.cos(ang) * r, 0.6 + rand() * 2.6, Math.sin(ang) * r);
-    g.userData = { baseY: g.position.y, phase: rand() * Math.PI * 2, speed: 0.6 + rand() * 0.5 };
-    group.add(g);
-    lanterns.push(g);
-  }
-  return lanterns;
-}
-
-function buildIslet(rand, scale) {
-  const g = new THREE.Group();
-  const top = new THREE.Mesh(
-    new THREE.CylinderGeometry(3, 2.7, 0.8, 9),
-    new THREE.MeshStandardMaterial({ color: '#7d8f2e', roughness: 1, flatShading: true })
-  );
-  g.add(top);
-  const rockGeo = new THREE.ConeGeometry(2.8, 5 + rand() * 3, 9, 3);
-  rockGeo.rotateX(Math.PI);
-  const p = rockGeo.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const k = 1 + (hash2(i, 7) - 0.5) * 0.35;
-    p.setX(i, p.getX(i) * k);
-    p.setZ(i, p.getZ(i) * k);
-  }
-  rockGeo.computeVertexNormals();
-  const rock = new THREE.Mesh(rockGeo, new THREE.MeshStandardMaterial({ color: '#7f4625', roughness: 1, flatShading: true }));
-  rock.position.y = -0.4 - rockGeo.parameters.height / 2;
-  g.add(rock);
-  const trunkMat = new THREE.MeshStandardMaterial({ color: '#5d2911', roughness: 1 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: rand() > 0.5 ? '#c85632' : '#dfba3d', roughness: 0.9, flatShading: true });
-  const trees = 1 + Math.floor(rand() * 3);
-  for (let i = 0; i < trees; i++) {
-    const t = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 1.1, 6), trunkMat);
-    trunk.position.y = 0.55;
-    const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9 + rand() * 0.4, 0), leafMat);
-    crown.position.y = 1.5;
-    t.add(trunk, crown);
-    const a = rand() * Math.PI * 2;
-    const r = rand() * 1.8;
-    t.position.set(Math.cos(a) * r, 0.4, Math.sin(a) * r);
-    g.add(t);
-  }
-  g.scale.setScalar(scale);
-  return g;
-}
-
-function buildDistantIslands(scene, rand) {
-  const islets = [];
-  for (let i = 0; i < 9; i++) {
-    const g = buildIslet(rand, 0.7 + rand() * 1.1);
-    const ang = (i / 9) * Math.PI * 2 + rand() * 0.4;
-    const dist = 70 + rand() * 45;
-    let x = Math.cos(ang) * dist;
-    const z = -45 + Math.sin(ang) * dist;
-    if (Math.abs(x) < 38) x = Math.sign(x || 1) * (38 + rand() * 10);
-    g.position.set(x, -8 + rand() * 12, z);
-    g.rotation.y = rand() * Math.PI;
-    g.userData = { baseY: g.position.y, phase: rand() * 6.28 };
-    scene.add(g);
-    islets.push(g);
-  }
-  return islets;
-}
-
+// Dust drifting in the sunbeams.
 function buildMotes(scene, rand) {
   const count = 260;
   const positions = new Float32Array(count * 3);
@@ -418,16 +464,16 @@ function buildMotes(scene, rand) {
     positions[i * 3] = Math.cos(ang) * r;
     positions[i * 3 + 1] = -6 + rand() * 16;
     positions[i * 3 + 2] = Math.sin(ang) * r;
-    speeds[i] = 0.2 + rand() * 0.4;
+    speeds[i] = 0.05 + rand() * 0.2;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   const mat = new THREE.PointsMaterial({
-    size: 0.16,
+    size: 0.12,
     map: textures().glow,
-    color: '#ffd9a8',
+    color: '#fff3d6',
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.7,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
   });
@@ -437,103 +483,70 @@ function buildMotes(scene, rand) {
   const update = (dt, t) => {
     const p = geo.attributes.position;
     for (let i = 0; i < count; i++) {
-      let y = p.getY(i) + speeds[i] * dt;
+      let y = p.getY(i) + Math.sin(t * 0.4 + i) * speeds[i] * dt;
       if (y > 10) y = -6;
       p.setY(i, y);
-      p.setX(i, p.getX(i) + Math.sin(t * 0.3 + i) * 0.002);
+      p.setX(i, p.getX(i) + Math.sin(t * 0.25 + i) * 0.004);
     }
     p.needsUpdate = true;
   };
   return { points, update };
 }
 
+// The lobby centrepiece: Dr. Hakim's Book of Love, open on a stand, with a heart above it.
 function buildHub(group) {
-  const stone = new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.75 });
-  const gold = new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 0.9, metalness: 0.7, roughness: 0.3 });
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1, 0.5, 32), stone);
-  base.position.y = 0.25;
-  base.castShadow = true;
-  base.receiveShadow = true;
-  const band = new THREE.Mesh(new THREE.TorusGeometry(0.92, 0.045, 8, 48), gold);
-  band.rotation.x = Math.PI / 2;
-  band.position.y = 0.44;
-  const core = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.36, 0),
-    new THREE.MeshStandardMaterial({ color: '#c8d8ff', emissive: '#4066c6', emissiveIntensity: 3, roughness: 0.2 })
-  );
-  core.position.y = 1.05;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.58, 0.035, 8, 48), gold);
-  ring.position.y = 1.05;
+  const red = new THREE.MeshStandardMaterial({ color: '#c8323c', roughness: 0.55 });
+  const pages = new THREE.MeshStandardMaterial({ color: '#fbf3e4', roughness: 0.8 });
+  const gold = new THREE.MeshStandardMaterial({ color: '#e8c060', roughness: 0.3, metalness: 0.8 });
   const hub = new THREE.Group();
-  hub.add(base, band, core, ring);
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.9, 0.5, 24), new THREE.MeshStandardMaterial({ color: '#8f5f34', roughness: 0.8 }));
+  stand.position.y = 0.25;
+  stand.castShadow = true;
+  stand.receiveShadow = true;
+  hub.add(stand);
+  const book = new THREE.Group();
+  book.position.y = 0.6;
+  [1, -1].forEach((s) => {
+    const cover = new THREE.Mesh(new RoundedBoxGeometry(0.75, 0.08, 1.05, 2, 0.03), red);
+    cover.position.set(s * 0.38, 0, 0);
+    cover.rotation.z = s * 0.18;
+    const leaf = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.1, 0.95), pages);
+    leaf.position.set(s * 0.36, 0.08, 0);
+    leaf.rotation.z = s * 0.18;
+    book.add(cover, leaf);
+  });
+  const spine = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.05, 8), gold);
+  spine.rotation.x = Math.PI / 2;
+  book.add(spine);
+  book.castShadow = true;
+  hub.add(book);
+  const heart = new THREE.Mesh(heartGeometry(0.3, 0.14), new THREE.MeshStandardMaterial({ color: '#ff5a76', emissive: '#d8314a', emissiveIntensity: 1.6, roughness: 0.3 }));
+  heart.position.y = 1.4;
+  hub.add(heart);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#ff7a95', transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
+  glow.position.y = 1.4;
+  glow.scale.setScalar(2);
+  hub.add(glow);
   group.add(hub);
   const update = (dt, t) => {
-    core.rotation.y += dt * 1.6;
-    core.position.y = 1.05 + Math.sin(t * 2.2) * 0.07;
-    ring.rotation.x = Math.PI / 2 + Math.sin(t * 1.3) * 0.4;
-    ring.rotation.y += dt;
+    heart.rotation.y += dt * 1.4;
+    heart.position.y = 1.4 + Math.sin(t * 2.2) * 0.08;
+    glow.position.y = heart.position.y;
+    const beat = 1 + Math.max(0, Math.sin(t * 5)) * 0.08;
+    heart.scale.setScalar(beat);
   };
   return { hub, update };
 }
 
-// The World Spire: the story's goal, always looming on the horizon.
-function buildSpire(scene) {
-  const tint = PALETTE.horizon.clone().lerp(PALETTE.skyMid, 0.55);
-  const rock = new THREE.MeshBasicMaterial({ color: tint.clone().multiplyScalar(0.75), fog: false });
-  const rockDark = new THREE.MeshBasicMaterial({ color: tint.clone().multiplyScalar(0.55), fog: false });
-  const glow = new THREE.MeshBasicMaterial({ color: '#c8d8ff', fog: false });
-  const g = new THREE.Group();
-  const segments = [
-    [26, 20, 60, -40],
-    [18, 13, 55, 20],
-    [12, 8, 45, 70],
-    [7, 3, 30, 108],
-  ];
-  segments.forEach(([r0, r1, h, y], i) => {
-    const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, 7), i % 2 ? rock : rockDark);
-    m.position.y = y + h / 2;
-    m.rotation.y = i * 0.4;
-    g.add(m);
-  });
-  const shards = [];
-  for (let i = 0; i < 7; i++) {
-    const s = new THREE.Mesh(new THREE.OctahedronGeometry(3 + (i % 3), 0), i === 0 ? glow : rock);
-    const a = (i / 7) * Math.PI * 2;
-    s.position.set(Math.cos(a) * 22, 150 + (i % 3) * 8, Math.sin(a) * 22);
-    s.userData.a = a;
-    g.add(s);
-    shards.push(s);
-  }
-  const crown = new THREE.Mesh(new THREE.OctahedronGeometry(9, 0), glow);
-  crown.position.y = 158;
-  crown.scale.y = 1.6;
-  g.add(crown);
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#7fa2ff', transparent: true, opacity: 0.7, depthWrite: false, fog: false, blending: THREE.AdditiveBlending }));
-  halo.position.y = 158;
-  halo.scale.setScalar(80);
-  g.add(halo);
-  g.position.set(55, -70, -330);
-  g.renderOrder = -8;
-  scene.add(g);
-  return (t) => {
-    crown.rotation.y = t * 0.15;
-    shards.forEach((s, i) => {
-      const a = s.userData.a + t * 0.04;
-      s.position.x = Math.cos(a) * 22;
-      s.position.z = Math.sin(a) * 22;
-      s.rotation.y = t * 0.3 + i;
-    });
-  };
-}
-
 // ---------- lights ----------
 
-const KEY_OFFSET = new THREE.Vector3(10, 24, 14);
+const KEY_OFFSET = new THREE.Vector3(-10, 26, 8);
 
 function buildLights(scene) {
-  scene.add(new THREE.HemisphereLight('#ffe2c0', '#3a2418', 0.95));
+  scene.add(new THREE.HemisphereLight('#fff3dc', '#7a5232', 1.25));
 
-  const key = new THREE.DirectionalLight('#ffd9a8', 2.6);
+  // Warm sunlight, high and from the front-left so the dolls stay readable.
+  const key = new THREE.DirectionalLight('#fff0d0', 2.7);
   key.position.copy(KEY_OFFSET);
   scene.add(key.target);
   key.castShadow = true;
@@ -544,41 +557,29 @@ function buildLights(scene) {
   key.shadow.normalBias = 0.03;
   scene.add(key);
 
-  const rim = new THREE.DirectionalLight('#8fa6d8', 1.0);
-  rim.position.set(-14, 9, -16);
-  scene.add(rim);
+  // Cool sky bounce from the front, so faces aren't lost in silhouette.
+  const fill = new THREE.DirectionalLight('#cfe6ff', 0.9);
+  fill.position.set(10, 12, 20);
+  scene.add(fill);
   return key;
 }
 
 export function buildEnvironment(scene) {
   const rand = seededRandom(20240917);
-  scene.fog = new THREE.Fog(PALETTE.fog, 55, 190);
-  const sunDir = new THREE.Vector3(-0.45, 0.1, -1).normalize();
+  scene.background = PALETTE.fog.clone();
+  scene.fog = new THREE.Fog(PALETTE.fog, 70, 420);
 
-  buildSky(scene, sunDir);
-  const clouds = [
-    buildCloudLayer(scene, { y: -16, scale: 0.03, speed: 0.35, coverage: 0.46, alpha: 0.92, lit: PALETTE.cloudLit, shade: PALETTE.cloudShade }),
-    buildCloudLayer(scene, {
-      y: -30,
-      scale: 0.018,
-      speed: 0.18,
-      coverage: 0.2,
-      alpha: 1,
-      lit: PALETTE.cloudLit.clone().lerp(PALETTE.cloudShade, 0.35),
-      shade: PALETTE.cloudShade.clone().multiplyScalar(0.7),
-    }),
-  ];
+  buildRoom(scene, rand);
+  const shafts = buildWindow(scene);
+  buildShedProps(scene, rand);
   const key = buildLights(scene);
   const plaza = buildArena(scene, rand);
   const hub = buildHub(plaza);
-  const lanterns = buildLanterns(plaza, rand);
-  const islets = buildDistantIslands(scene, rand);
   const motes = buildMotes(scene, rand);
-  const updateSpire = buildSpire(scene);
 
   return {
     plaza,
-    // The boss arena reuses the plaza floor but not its centre crystal.
+    // The boss arena reuses the stool seat but not the book on its stand.
     setPlaza(visible, { hub: showHub = true } = {}) {
       plaza.visible = visible;
       hub.hub.visible = showHub;
@@ -591,14 +592,7 @@ export function buildEnvironment(scene) {
     },
     update(dt, t) {
       hub.update(dt, t);
-      updateSpire(t);
-      for (const c of clouds) c.uniforms.uTime.value = t;
-      for (const l of lanterns) {
-        const u = l.userData;
-        l.position.y = u.baseY + Math.sin(t * u.speed + u.phase) * 0.25;
-        l.rotation.y = Math.sin(t * 0.4 + u.phase) * 0.3;
-      }
-      for (const g of islets) g.position.y = g.userData.baseY + Math.sin(t * 0.25 + g.userData.phase) * 0.6;
+      for (const s of shafts) s.material.opacity = 0.13 + Math.sin(t * 0.35 + s.userData.phase) * 0.04;
       motes.update(dt, t);
     },
   };

@@ -2,24 +2,23 @@ import * as THREE from 'three';
 import { METEOR } from '@shared/constants.js';
 import { textures } from './textures.js';
 
-function rockGeometry() {
-  const geo = new THREE.IcosahedronGeometry(METEOR.radius, 1);
-  const p = geo.attributes.position;
-  const v = new THREE.Vector3();
-  for (let i = 0; i < p.count; i++) {
-    v.fromBufferAttribute(p, i);
-    const n = Math.sin(v.x * 9.1) * Math.cos(v.y * 7.3) * Math.sin(v.z * 8.7);
-    v.multiplyScalar(1 + n * 0.18);
-    p.setXYZ(i, v.x, v.y, v.z);
-  }
-  geo.computeVertexNormals();
-  return geo;
+// A big hex-head bolt, falling point-first.
+function boltGeometry() {
+  const r = METEOR.radius;
+  const head = new THREE.CylinderGeometry(r * 1.05, r * 1.05, r * 0.55, 6);
+  head.translate(0, r * 1.05, 0);
+  const shank = new THREE.CylinderGeometry(r * 0.48, r * 0.48, r * 1.7, 12);
+  shank.translate(0, 0, 0);
+  const tip = new THREE.ConeGeometry(r * 0.48, r * 0.5, 12);
+  tip.rotateX(Math.PI);
+  tip.translate(0, -r * 1.1, 0);
+  return [head, shank, tip];
 }
 
 export function createMeteors(scene, effects) {
-  const geo = rockGeometry();
-  const rockMat = new THREE.MeshStandardMaterial({ color: '#4a2418', emissive: '#ff5a1f', emissiveIntensity: 1.5, roughness: 0.8, flatShading: true });
-  const glowMat = new THREE.SpriteMaterial({ map: textures().glow, color: '#ff7a2e', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.7 });
+  const [headGeo, shankGeo, tipGeo] = boltGeometry();
+  const rockMat = new THREE.MeshStandardMaterial({ color: '#b9bec5', roughness: 0.3, metalness: 0.8, flatShading: true });
+  const glowMat = new THREE.SpriteMaterial({ map: textures().glow, color: '#fff3c4', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0.35 });
   const discGeo = new THREE.CircleGeometry(METEOR.blastRadius, 48);
   discGeo.rotateX(-Math.PI / 2);
   const ringGeo = new THREE.RingGeometry(METEOR.blastRadius - 0.12, METEOR.blastRadius, 64);
@@ -32,15 +31,19 @@ export function createMeteors(scene, effects) {
   let onSpawn = () => {};
 
   function make() {
-    const rock = new THREE.Mesh(geo, rockMat);
-    rock.castShadow = true;
+    const rock = new THREE.Group();
+    for (const geo of [headGeo, shankGeo, tipGeo]) {
+      const m = new THREE.Mesh(geo, rockMat);
+      m.castShadow = true;
+      rock.add(m);
+    }
     const glow = new THREE.Sprite(glowMat);
     glow.scale.setScalar(1.7);
     rock.add(glow);
 
     const marker = new THREE.Group();
-    const discMat = new THREE.MeshBasicMaterial({ color: '#ff4a2e', transparent: true, opacity: 0.25, depthWrite: false, blending: THREE.AdditiveBlending });
-    const ringMat = new THREE.MeshBasicMaterial({ color: '#ffb35c', transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending });
+    const discMat = new THREE.MeshBasicMaterial({ color: '#f2a93c', transparent: true, opacity: 0.25, depthWrite: false });
+    const ringMat = new THREE.MeshBasicMaterial({ color: '#f2c94c', transparent: true, opacity: 0.8, depthWrite: false });
     const disc = new THREE.Mesh(discGeo, discMat);
     const ring = new THREE.Mesh(ringGeo, ringMat);
     const dot = new THREE.Mesh(dotGeo, ringMat);
@@ -80,15 +83,15 @@ export function createMeteors(scene, effects) {
         }
         const [x, y, z] = m.pos;
         e.rock.position.set(x, y, z);
-        e.rock.rotation.x += e.spin.x * dt;
-        e.rock.rotation.y += e.spin.y * dt;
+        // Bolts tumble a little but mostly fall point-down, spinning on their axis.
+        e.rock.rotation.set(Math.sin(t * e.spin.x) * 0.25, e.rock.rotation.y + e.spin.y * dt * 2, Math.cos(t * e.spin.z) * 0.25);
         e.marker.position.set(x, (m.gy ?? 0) + 0.04, z);
         const k = m.k;
         e.disc.scale.setScalar(0.15 + 0.85 * k);
         const pulse = 0.5 + 0.5 * Math.sin(t * (6 + k * 26));
         e.discMat.opacity = 0.12 + k * 0.3;
         e.ringMat.opacity = 0.35 + 0.55 * pulse * (0.4 + k * 0.6);
-        if (Math.random() < 0.9) effects.trail(m.pos);
+        if (Math.random() < 0.3) effects.trail(m.pos);
       }
       for (const id of Array.from(live.keys())) if (!seen.has(id)) release(id);
     },

@@ -12,23 +12,30 @@ function materials() {
   if (mats) return mats;
   const tex = levelTextures();
   mats = {
-    rock: new THREE.MeshStandardMaterial({ color: '#8a5a3a', roughness: 0.95, flatShading: true }),
-    rockDark: new THREE.MeshStandardMaterial({ color: '#4a2614', roughness: 1, flatShading: true }),
-    dirt: new THREE.MeshStandardMaterial({ color: '#8a5c48', roughness: 0.95 }),
-    sandBody: new THREE.MeshStandardMaterial({ color: '#b98a62', roughness: 0.9 }),
-    marbleBody: new THREE.MeshStandardMaterial({ color: '#b8a690', roughness: 0.8 }),
-    metal: new THREE.MeshStandardMaterial({ color: '#3a3330', roughness: 0.35, metalness: 0.6 }),
-    gold: new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 0.8, metalness: 0.7, roughness: 0.3 }),
-    trim: new THREE.MeshStandardMaterial({ color: '#fff0c8', emissive: '#ffb347', emissiveIntensity: 2.2, roughness: 0.4 }),
-    crumbleBody: new THREE.MeshStandardMaterial({ color: '#a8744f', roughness: 0.95 }),
+    // Paint tins (round "stone" platforms) and the wood under everything else.
+    tin: new THREE.MeshStandardMaterial({ color: '#b9b4ab', roughness: 0.35, metalness: 0.6 }),
+    tinLabel: new THREE.MeshStandardMaterial({ color: '#3f7fd8', roughness: 0.7 }),
+    woodDark: new THREE.MeshStandardMaterial({ color: '#6e4426', roughness: 0.85 }),
+    bench: new THREE.MeshStandardMaterial({ color: '#9a6538', roughness: 0.8 }),
+    pages: new THREE.MeshStandardMaterial({ color: '#f1e4c8', roughness: 0.9 }),
+    shelf: new THREE.MeshStandardMaterial({ color: '#d2a774', roughness: 0.75 }),
+    metal: new THREE.MeshStandardMaterial({ color: '#7d8590', roughness: 0.35, metalness: 0.65 }),
+    gold: new THREE.MeshStandardMaterial({ color: '#e8c060', roughness: 0.35, metalness: 0.8 }),
+    trim: new THREE.MeshStandardMaterial({ color: '#2d2a26', roughness: 0.6 }),
+    hazard: new THREE.MeshStandardMaterial({ color: '#f2c94c', emissive: '#f2a93c', emissiveIntensity: 0.35, roughness: 0.6 }),
+    cardboardBody: new THREE.MeshStandardMaterial({ color: '#b5864f', roughness: 0.95 }),
     grassTop: tex.grass,
-    sandTop: tex.sand,
+    tinTop: tex.sand,
+    bookTop: tex.book,
     marbleTop: tex.marble,
     crumbleTop: tex.crumble,
   };
   for (const m of Object.values(mats)) if (m.isMaterial) m.userData.shared = true;
   return mats;
 }
+
+const BOOK_COLORS = ['#c8323c', '#2f6a8f', '#3f7a4a', '#7a3f8f', '#d98a2b'];
+const TIN_COLORS = ['#3f7fd8', '#e0563f', '#f2c94c', '#4f9e3f', '#d9578f'];
 
 function topMaterial(map, w, d, scale = 2) {
   const t = map.clone();
@@ -37,41 +44,25 @@ function topMaterial(map, w, d, scale = 2) {
   return new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 });
 }
 
-// Inverted rocky spire under a floating island.
-function islandRoot(width, depth, seed) {
-  const radius = Math.min(width, depth) * 0.48;
-  const height = Math.max(2.5, (width + depth) * 0.32);
-  const geo = new THREE.ConeGeometry(radius, height, 7, 3);
-  geo.rotateX(Math.PI);
-  const p = geo.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i);
-    const y = p.getY(i);
-    const z = p.getZ(i);
-    const k = 1 + (hash(Math.round(x * 10) + Math.round(z * 10) * 7 + Math.round(y * 10) * 13 + seed) - 0.5) * 0.35;
-    p.setXYZ(i, x * k, y, z * k);
+// Workbenches, shelves and crates stand on long legs down to the shed floor.
+function tableLegs(width, depth, material) {
+  const g = new THREE.Group();
+  const len = 34;
+  const geo = new THREE.BoxGeometry(0.45, len, 0.45);
+  const ix = width / 2 - 0.5;
+  const iz = depth / 2 - 0.5;
+  for (const [x, z] of [[ix, iz], [-ix, iz], [ix, -iz], [-ix, -iz]]) {
+    const leg = new THREE.Mesh(geo, material);
+    leg.position.set(x, -len / 2, z);
+    g.add(leg);
   }
-  geo.scale(width / Math.min(width, depth), 1, depth / Math.min(width, depth));
-  geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, materials().rock);
-  m.position.y = -height / 2;
-  return m;
-}
-
-function grassTufts(group, w, d, seed, top = 0) {
-  const geo = new THREE.ConeGeometry(0.06, 0.32, 4);
-  const mat = new THREE.MeshStandardMaterial({ color: '#8a9a2e', roughness: 1 });
-  const count = Math.round((w * d) / 3);
-  const mesh = new THREE.InstancedMesh(geo, mat, count);
-  const m = new THREE.Matrix4();
-  for (let i = 0; i < count; i++) {
-    const x = (hash(seed + i * 3.1) - 0.5) * (w - 0.6);
-    const z = (hash(seed + i * 7.7) - 0.5) * (d - 0.6);
-    const s = 0.7 + hash(seed + i) * 0.8;
-    m.makeScale(s, s, s).setPosition(x, top + 0.12 * s + 0.02, z);
-    mesh.setMatrixAt(i, m);
-  }
-  group.add(mesh);
+  // A cross-brace a little way down, like a real bench.
+  const brace = new THREE.Mesh(new THREE.BoxGeometry(width - 1, 0.3, 0.25), material);
+  brace.position.set(0, -3.2, iz);
+  const brace2 = brace.clone();
+  brace2.position.z = -iz;
+  g.add(brace, brace2);
+  return g;
 }
 
 /**
@@ -94,24 +85,35 @@ export function buildPlatform(def, { plateColor } = {}) {
     return isDisc ? new THREE.CylinderGeometry(def.radius + grow / 2, def.radius + grow / 2, thick, 40) : new RoundedBoxGeometry(w + grow, thick, d + grow, 2, Math.min(0.1, thick / 2));
   };
 
-  let bodyMat = M.sandBody;
+  let bodyMat = M.bench;
   let top = null;
   switch (def.style) {
     case 'grass':
-      bodyMat = M.dirt;
+      // A workbench top.
+      bodyMat = M.bench;
       top = new THREE.Mesh(capGeo(0.3), topMaterial(M.grassTop, w, d, 3));
       break;
     case 'stone':
-      bodyMat = M.sandBody;
-      top = new THREE.Mesh(capGeo(0.22, 0.08), topMaterial(M.sandTop, w, d, 2));
+      if (isDisc) {
+        // A paint tin: metal lid on a labelled can.
+        bodyMat = M.tin;
+        top = new THREE.Mesh(capGeo(0.16, 0.1), topMaterial(M.tinTop, w, d, w));
+      } else {
+        // A stack of old hardcover books.
+        bodyMat = M.pages;
+        const cover = topMaterial(M.bookTop, w, d, Math.max(w, d));
+        cover.color.set(BOOK_COLORS[Math.floor(seed) % BOOK_COLORS.length]);
+        top = new THREE.Mesh(capGeo(0.24, 0.22), cover);
+      }
       break;
     case 'ruin':
-      bodyMat = M.marbleBody;
-      top = new THREE.Mesh(capGeo(0.22, 0.08), topMaterial(M.marbleTop, w, d, 2.5));
+      // A pale pine shelf or ruler.
+      bodyMat = M.shelf;
+      top = new THREE.Mesh(capGeo(0.18, 0.06), topMaterial(M.marbleTop, w, d, 2.5));
       break;
     case 'crumble':
-      bodyMat = M.crumbleBody;
-      top = new THREE.Mesh(capGeo(0.2, 0.04), topMaterial(M.crumbleTop, w, d, 3));
+      bodyMat = M.cardboardBody;
+      top = new THREE.Mesh(capGeo(0.14, 0.04), topMaterial(M.crumbleTop, w, d, 3));
       break;
     case 'metal':
     case 'gate':
@@ -122,8 +124,6 @@ export function buildPlatform(def, { plateColor } = {}) {
       break;
   }
 
-  // Stone pillars read as faceted rock rather than smooth (barrel-like) cylinders.
-  if (isDisc && def.style === 'stone') bodyMat = M.rock;
   const body = new THREE.Mesh(bodyGeo, bodyMat ?? M.metal);
   body.position.y = -h / 2;
   body.castShadow = def.style !== 'arena';
@@ -138,31 +138,44 @@ export function buildPlatform(def, { plateColor } = {}) {
     group.add(top);
   }
 
-  if (def.style === 'ruin' && !isDisc) {
-    const band = new THREE.Mesh(new THREE.BoxGeometry(w + 0.14, 0.08, d + 0.14), M.gold);
-    band.position.y = -0.26;
-    group.add(band);
+  if (def.style === 'stone' && isDisc) {
+    // The tin's paper label.
+    const label = new THREE.Mesh(
+      new THREE.CylinderGeometry(def.radius * 0.955 + 0.02, def.radius * 0.92 + 0.02, h * 0.55, 40, 1, true),
+      M.tinLabel.clone()
+    );
+    label.material.userData = {};
+    label.material.color.set(TIN_COLORS[Math.floor(seed) % TIN_COLORS.length]);
+    label.position.y = -h / 2;
+    group.add(label);
+  }
+  if (def.style === 'stone' && !isDisc) {
+    // Each book in the stack gets its own coloured cover band.
+    const books = Math.max(1, Math.round(h / 0.9));
+    for (let i = 1; i < books; i++) {
+      const band = new THREE.Mesh(new THREE.BoxGeometry(w + 0.12, 0.12, d + 0.12), M.trim.clone());
+      band.material.userData = {};
+      band.material.color.set(BOOK_COLORS[(Math.floor(seed) + i) % BOOK_COLORS.length]);
+      band.position.set((hash(seed + i) - 0.5) * 0.3, -(i * h) / books, (hash(seed - i) - 0.5) * 0.3);
+      group.add(band);
+    }
   }
 
   if (def.style === 'metal') {
-    // Glowing edge strips and an anti-grav glow underneath.
+    // A steel tray with yellow hazard edging.
     const strip = (sx, sz, x, z) => {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.07, sz), M.trim);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.07, sz), M.hazard);
       m.position.set(x, 0.01, z);
       group.add(m);
     };
-    strip(w - 0.2, 0.1, 0, d / 2 - 0.12);
-    strip(w - 0.2, 0.1, 0, -d / 2 + 0.12);
-    strip(0.1, d - 0.2, w / 2 - 0.12, 0);
-    strip(0.1, d - 0.2, -w / 2 + 0.12, 0);
-    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#ffb35c', transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending }));
-    glow.position.y = -h - 0.25;
-    glow.scale.set(w * 0.9, 0.9, 1);
-    group.add(glow);
+    strip(w - 0.2, 0.12, 0, d / 2 - 0.12);
+    strip(w - 0.2, 0.12, 0, -d / 2 + 0.12);
+    strip(0.12, d - 0.2, w / 2 - 0.12, 0);
+    strip(0.12, d - 0.2, -w / 2 + 0.12, 0);
     if (plateColor) {
       const rune = new THREE.Mesh(
         new THREE.PlaneGeometry(Math.min(w, d) * 0.7, Math.min(w, d) * 0.7),
-        new THREE.MeshBasicMaterial({ map: runeTexture(plateColor), transparent: true, opacity: 0.8, depthWrite: false })
+        new THREE.MeshBasicMaterial({ map: runeTexture(plateColor), transparent: true, opacity: 0.85, depthWrite: false })
       );
       rune.rotation.x = -Math.PI / 2;
       rune.position.y = 0.02;
@@ -173,7 +186,7 @@ export function buildPlatform(def, { plateColor } = {}) {
 
   if (def.style === 'gate') {
     for (let i = -2; i <= 2; i++) {
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.16, h * 0.9, d + 0.1), M.gold);
+      const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, h * 0.9, 10), M.shelf);
       bar.position.set((i * w) / 5.5, -h / 2, 0);
       group.add(bar);
     }
@@ -185,13 +198,18 @@ export function buildPlatform(def, { plateColor } = {}) {
     group.add(glyph);
   }
 
-  const isIsland = ['grass', 'stone', 'ruin'].includes(def.style) && h >= 2.4 && !def.move && !def.wall;
-  if (isIsland) {
-    const root = islandRoot(w * 0.95, d * 0.95, seed);
-    root.position.y -= h - 0.2;
-    group.add(root);
+  const standing = ['grass', 'stone', 'ruin'].includes(def.style) && !isDisc && h >= 2.4 && !def.move && !def.wall;
+  if (standing) {
+    const legs = tableLegs(w, d, def.style === 'stone' ? M.woodDark : M.bench);
+    legs.position.y = -h;
+    group.add(legs);
   }
-  if (def.style === 'grass' && !def.move) grassTufts(group, w, d, seed, 0.02);
+  if (isDisc && def.style === 'stone' && !def.move) {
+    // Paint tins sit on a tall stack of crates down to the floor.
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(def.radius * 0.75, def.radius * 0.75, 34, 16), M.woodDark);
+    post.position.y = -h - 17;
+    group.add(post);
+  }
 
   group.position.set(...def.pos);
   return { group, solid: body, height: h };
@@ -208,126 +226,168 @@ function pm(key, make) {
   return propMat[key];
 }
 
+const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, ...extra });
+
+function shadowed(...meshes) {
+  for (const m of meshes) m.castShadow = true;
+  return meshes;
+}
+
+// Household odds and ends at doll scale.
 export function buildDecor({ kind, pos, scale = 1, rotY }) {
   const g = new THREE.Group();
   const seed = hash(pos[0] * 3 + pos[2] * 11);
-  const marble = pm('marble', () => new THREE.MeshStandardMaterial({ color: '#efe4d2', roughness: 0.7 }));
-  const gold = materials().gold;
   switch (kind) {
-    case 'tree': {
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.22, 1.4, 7), pm('trunk', () => new THREE.MeshStandardMaterial({ color: '#5d2911', roughness: 1 })));
-      trunk.position.y = 0.7;
-      g.add(trunk);
-      const leaf = seed > 0.5 ? pm('leafPink', () => new THREE.MeshStandardMaterial({ color: '#c85632', roughness: 0.9, flatShading: true })) : pm('leafGreen', () => new THREE.MeshStandardMaterial({ color: '#8a9a2e', roughness: 0.9, flatShading: true }));
-      [
-        [0, 1.9, 0, 0.95],
-        [0.45, 1.6, 0.2, 0.6],
-        [-0.4, 1.7, -0.2, 0.65],
-      ].forEach(([x, y, z, r]) => {
-        const c = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), leaf);
-        c.position.set(x, y, z);
-        c.castShadow = true;
-        g.add(c);
-      });
-      break;
-    }
-    case 'rock': {
-      const r = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55, 0), materials().rockDark);
-      r.scale.set(1.2, 0.7, 1);
-      r.position.y = 0.25;
-      r.rotation.y = seed * 6;
-      r.castShadow = true;
-      g.add(r);
-      break;
-    }
-    case 'crystal': {
-      const m = pm('crystal', () => new THREE.MeshStandardMaterial({ color: '#a8c4ff', emissive: '#4066c6', emissiveIntensity: 2.2, roughness: 0.15 }));
-      for (let i = 0; i < 3; i++) {
-        const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.3, 0), m);
-        c.scale.set(0.8, 1.8 + i * 0.4, 0.8);
-        c.position.set((i - 1) * 0.28, 0.5 + i * 0.1, (i % 2) * 0.2);
-        c.rotation.z = (i - 1) * 0.3;
-        g.add(c);
+    case 'plant': {
+      // One of Cody's seedlings in a terracotta pot.
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.36, 0.7, 16), pm('terracotta', () => std('#c8653a', { roughness: 0.9 })));
+      pot.position.y = 0.35;
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.56, 0.16, 16), pm('terracotta', () => std('#c8653a')));
+      rim.position.y = 0.72;
+      const soil = new THREE.Mesh(new THREE.CircleGeometry(0.48, 16), pm('soil', () => std('#4a2f1e', { roughness: 1 })));
+      soil.rotation.x = -Math.PI / 2;
+      soil.position.y = 0.79;
+      g.add(...shadowed(pot, rim), soil);
+      const leaf = pm('leaf', () => std('#5aa04a', { roughness: 0.8, side: THREE.DoubleSide }));
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 1, 6), leaf);
+      stem.position.y = 1.25;
+      g.add(stem);
+      const shape = new THREE.Shape();
+      shape.moveTo(0, 0);
+      shape.quadraticCurveTo(0.3, 0.25, 0, 0.75);
+      shape.quadraticCurveTo(-0.3, 0.25, 0, 0);
+      const leafGeo = new THREE.ShapeGeometry(shape, 8);
+      for (let i = 0; i < 5; i++) {
+        const l = new THREE.Mesh(leafGeo, leaf);
+        l.position.y = 0.95 + i * 0.16;
+        l.rotation.set(0.9, (i / 5) * Math.PI * 2 + seed * 3, 0);
+        l.castShadow = true;
+        g.add(l);
       }
       break;
     }
-    case 'lantern': {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 1.6, 6), pm('iron', () => new THREE.MeshStandardMaterial({ color: '#3a2618', roughness: 0.6, metalness: 0.4 })));
-      post.position.y = 0.8;
-      const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.16, 0.36, 8), pm('lamp', () => new THREE.MeshStandardMaterial({ color: '#ffd29a', emissive: '#ff9a3c', emissiveIntensity: 2.6 })));
-      lamp.position.y = 1.75;
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#ff9d52', transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
-      halo.position.y = 1.75;
-      halo.scale.setScalar(1.6);
-      g.add(post, lamp, halo);
+    case 'nut': {
+      // A giant hex nut lying on its side.
+      const nut = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.42, 6), pm('steel', () => std('#9aa1a8', { metalness: 0.75, roughness: 0.35 })));
+      nut.position.y = 0.21;
+      const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.44, 16), pm('steelDark', () => std('#3a3d42', { metalness: 0.6, roughness: 0.5 })));
+      hole.position.y = 0.21;
+      g.add(...shadowed(nut), hole);
       break;
     }
-    case 'ruin': {
-      const col = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 1.9, 12), marble);
-      col.position.y = 0.95;
-      col.castShadow = true;
-      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.34, 0.35, 12), marble);
-      cap.position.set(0.05, 2.0, 0);
-      cap.rotation.z = 0.35;
-      const chunk = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.7, 12), marble);
-      chunk.rotation.z = Math.PI / 2;
-      chunk.position.set(0.8, 0.32, 0.4);
-      chunk.castShadow = true;
-      g.add(col, cap, chunk);
+    case 'jar': {
+      // A glass jar of buttons.
+      const glass = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.42, 1.1, 20),
+        pm('glass', () => new THREE.MeshPhysicalMaterial({ color: '#dff1ff', roughness: 0.05, transmission: 0.6, transparent: true, opacity: 0.45, depthWrite: false }))
+      );
+      glass.position.y = 0.55;
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.14, 20), pm('lidRed', () => std('#c8323c', { metalness: 0.3 })));
+      lid.position.y = 1.16;
+      g.add(lid);
+      const colors = ['#3f7fd8', '#f2c94c', '#d9578f', '#4f9e3f', '#e0563f'];
+      for (let i = 0; i < 9; i++) {
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.05, 12), pm(`button${i % 5}`, () => std(colors[i % 5], { roughness: 0.4 })));
+        b.position.set((hash(seed + i) - 0.5) * 0.5, 0.1 + i * 0.07, (hash(seed - i) - 0.5) * 0.5);
+        b.rotation.set(hash(i + seed) * 1.2, 0, hash(i * 3) * 1.2);
+        g.add(b);
+      }
+      g.add(glass);
       break;
     }
-    case 'banner': {
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 3, 6), gold);
-      pole.position.y = 1.5;
-      const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.1, 6), gold);
-      bar.rotation.z = Math.PI / 2;
-      bar.position.set(0, 2.85, 0.05);
+    case 'candle': {
+      // A stubby candle in a saucer, lit.
+      const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.32, 0.1, 18), pm('enamel', () => std('#f3ede2', { roughness: 0.3 })));
+      saucer.position.y = 0.05;
+      const wax = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.9, 14), pm('wax', () => std('#fbe9c8', { roughness: 0.6 })));
+      wax.position.y = 0.55;
+      const flame = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), pm('flame', () => std('#fff1b0', { emissive: '#ffb347', emissiveIntensity: 3 })));
+      flame.scale.y = 1.8;
+      flame.position.y = 1.12;
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: textures().glow, color: '#ffb35c', transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending }));
+      halo.position.y = 1.12;
+      halo.scale.setScalar(1.3);
+      g.add(...shadowed(saucer, wax), flame, halo);
+      break;
+    }
+    case 'spool': {
+      // A wooden cotton reel wound with coloured thread.
+      const wood = pm('spoolWood', () => std('#d9b07a'));
+      const threads = ['#d8314a', '#3f7fd8', '#f2c94c', '#4f9e3f'];
+      const thread = pm(`thread${Math.floor(seed * 4)}`, () => std(threads[Math.floor(seed * 4)], { roughness: 0.95 }));
+      const bottom = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.16, 20), wood);
+      bottom.position.y = 0.08;
+      const top = bottom.clone();
+      top.position.y = 1.32;
+      const core = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.46, 1.1, 20), thread);
+      core.position.y = 0.7;
+      g.add(...shadowed(bottom, top, core));
+      break;
+    }
+    case 'pennant': {
+      // Rose's drawing pinned to a pencil.
+      const pencil = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3, 6), pm('pencil', () => std('#f2c94c')));
+      pencil.position.y = 1.5;
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.2, 6), pm('pencilTip', () => std('#e8c49a')));
+      tip.position.y = 3.1;
       const cloth = new THREE.Mesh(
         new THREE.PlaneGeometry(1, 1.9, 1, 8),
         pm('bannerCloth', () => new THREE.MeshStandardMaterial({ map: levelTextures().banner, side: THREE.DoubleSide, transparent: true, alphaTest: 0.5, roughness: 0.9 }))
       );
-      cloth.position.set(0, 1.85, 0.08);
-      cloth.userData.wave = true;
-      g.add(pole, bar, cloth);
+      cloth.position.set(0.55, 1.95, 0);
+      g.add(...shadowed(pencil), tip, cloth);
       g.userData.cloth = cloth;
       break;
     }
-    case 'statue': {
-      const plinth = new THREE.Mesh(new RoundedBoxGeometry(1.1, 0.6, 1.1, 2, 0.08), marble);
-      plinth.position.y = 0.3;
-      const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12), marble);
-      body.position.y = 1.05;
-      body.scale.set(1, 1.1, 0.9);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 12), marble);
-      head.position.y = 1.72;
-      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.25, 6), gold);
-      horn.position.set(0.14, 2.02, 0);
-      const horn2 = horn.clone();
-      horn2.position.x = -0.14;
-      const link = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.05, 8, 16), gold);
-      link.position.set(0.45, 0.95, 0.2);
-      [plinth, body, head].forEach((m) => (m.castShadow = true));
-      g.add(plinth, body, head, horn, horn2, link);
+    case 'blocks': {
+      // Rose's old wooden alphabet blocks.
+      const colors = ['#c8323c', '#3f7fd8', '#f2c94c'];
+      [
+        [0, 0.4, 0, 0.8],
+        [0.85, 0.4, 0.1, 0.8],
+        [0.4, 1.2, 0.05, 0.8],
+      ].forEach(([x, y, z, sz], i) => {
+        const b = new THREE.Mesh(new RoundedBoxGeometry(sz, sz, sz, 2, 0.06), pm(`block${i}`, () => std(colors[i], { roughness: 0.55 })));
+        b.position.set(x - 0.4, y, z);
+        b.rotation.y = (hash(seed + i) - 0.5) * 0.5;
+        b.castShadow = true;
+        g.add(b);
+      });
       break;
     }
-    case 'arch': {
+    case 'pencils': {
+      // An archway of two giant pencils and a ruler across the top.
+      const body = pm('pencil', () => std('#f2c94c'));
       [-2.4, 2.4].forEach((x) => {
-        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 4.6, 12), marble);
+        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 4.6, 6), body);
         p.position.set(x, 2.3, 0);
         p.castShadow = true;
-        g.add(p);
+        const eraser = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.4, 12), pm('eraser', () => std('#ef8fae')));
+        eraser.position.set(x, 4.8, 0);
+        g.add(p, eraser);
       });
-      const arc = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.38, 10, 32, Math.PI), marble);
-      arc.position.y = 4.5;
-      const stone = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), pm('crystal', () => new THREE.MeshStandardMaterial({ color: '#a8c4ff', emissive: '#4066c6', emissiveIntensity: 2.2 })));
-      stone.position.y = 6.9;
-      stone.scale.y = 1.5;
-      g.add(arc, stone);
+      const ruler = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.35, 1.1), pm('ruler', () => std('#e6c79a')));
+      ruler.position.y = 5.15;
+      ruler.castShadow = true;
+      const heart = new THREE.Mesh(heartGeometry(0.6, 0.2), pm('heartRed', () => std('#d8314a', { emissive: '#d8314a', emissiveIntensity: 0.6 })));
+      heart.position.y = 6.2;
+      g.add(ruler, heart);
       break;
     }
   }
   g.position.set(...pos);
   g.scale.setScalar(scale);
-  g.rotation.y = rotY ?? (kind === 'banner' || kind === 'arch' || kind === 'statue' ? 0 : seed * Math.PI * 2);
+  g.rotation.y = rotY ?? (kind === 'pennant' || kind === 'pencils' || kind === 'blocks' ? 0 : seed * Math.PI * 2);
   return g;
+}
+
+// A puffy extruded heart, centred on its own origin.
+export function heartGeometry(size = 0.4, depth = 0.18) {
+  const s = new THREE.Shape();
+  s.moveTo(0, -size);
+  s.bezierCurveTo(-size * 1.6, -size * 0.1, -size * 0.8, size * 1.1, 0, size * 0.45);
+  s.bezierCurveTo(size * 0.8, size * 1.1, size * 1.6, -size * 0.1, 0, -size);
+  const geo = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelThickness: depth * 0.5, bevelSize: size * 0.18, bevelSegments: 4, curveSegments: 16 });
+  geo.center();
+  return geo;
 }

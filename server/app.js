@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
 import { customAlphabet } from 'nanoid';
 import { Room } from './room.js';
-import { isValidAvatarType, isValidColor } from '../shared/constants.js';
+import { isValidAvatarType } from '../shared/constants.js';
 
 const genCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
 const CLIENT_DIST = fileURLToPath(new URL('../client/dist', import.meta.url));
@@ -77,13 +77,7 @@ export function createApp() {
 
     socket.on('set-avatar', (avatar) => {
       const room = roomOf(socket);
-      const player = room?.getPlayer(socket.id);
-      if (!player || !room.canChangeAvatar()) return;
-      player.avatar = {
-        type: isValidAvatarType(avatar?.type) ? avatar.type : player.avatar.type,
-        color: isValidColor(avatar?.color) ? avatar.color.toLowerCase() : player.avatar.color,
-      };
-      broadcastLobby(room);
+      if (room && isValidAvatarType(avatar?.type) && room.setCharacter(socket.id, avatar.type)) broadcastLobby(room);
     });
 
     socket.on('select-level', (payload) => {

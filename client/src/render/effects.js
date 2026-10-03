@@ -158,7 +158,7 @@ export function createEffects(scene, camera, renderer) {
       ring(x, Math.max(0, y - 0.55), z, { color: hex, radius: 1.8, duration: 0.35 });
     },
     landPuff([x, y, z], strength = 1) {
-      const c = col('#caa27c');
+      const c = col('#d9b48a');
       const n = Math.round(4 + strength * 5);
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2 + Math.random() * 0.3;
@@ -167,9 +167,9 @@ export function createEffects(scene, camera, renderer) {
       }
     },
     impact([x, , z], y = 0) {
-      const orange = col('#ff8a3c');
-      const yellow = col('#ffe08a');
-      const smoke = col('#4a3428');
+      const orange = col('#fff1b0');
+      const yellow = col('#f2c94c');
+      const smoke = col('#d9b48a');
       for (let i = 0; i < 34; i++) {
         const a = Math.random() * Math.PI * 2;
         const s = 3 + Math.random() * 7;
@@ -180,9 +180,9 @@ export function createEffects(scene, camera, renderer) {
         const s = 1 + Math.random() * 3;
         dust.emit({ x, y: y + 0.3, z, vx: Math.cos(a) * s, vy: 1 + Math.random() * 2.5, vz: Math.sin(a) * s, life: 0.9 + Math.random() * 0.6, size: 0.6, sizeEnd: 1.6, color: smoke, alpha: 0.5, drag: 2.2 });
       }
-      ring(x, y, z, { color: '#ffb35c', radius: METEOR.blastRadius * 1.35, duration: 0.5 });
-      ring(x, y, z, { color: '#ff5a2e', radius: METEOR.blastRadius * 0.9, duration: 0.3 });
-      flash(x, y + 0.6, z, '#ff9a4a', 4.2, 0.28);
+      ring(x, y, z, { color: '#f2c94c', radius: METEOR.blastRadius * 1.35, duration: 0.5 });
+      ring(x, y, z, { color: '#fff1b0', radius: METEOR.blastRadius * 0.9, duration: 0.3 });
+      flash(x, y + 0.6, z, '#fff1b0', 3.2, 0.2);
       const mat = new THREE.MeshBasicMaterial({ map: textures().scorch, transparent: true, depthWrite: false, opacity: 0.85 });
       const s = new THREE.Mesh(scorchGeo, mat);
       s.position.set(x, y + 0.015, z);
@@ -203,7 +203,7 @@ export function createEffects(scene, camera, renderer) {
         life: 0.35,
         size: 0.55,
         sizeEnd: 0.1,
-        color: Math.random() > 0.4 ? col('#ff7a2e') : col('#ffd27a'),
+        color: Math.random() > 0.4 ? col('#e8e2d6') : col('#fff3c4'),
         alpha: 0.9,
         drag: 2,
       });

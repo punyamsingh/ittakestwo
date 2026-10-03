@@ -1,4 +1,4 @@
-import { TICK_RATE, DEFAULT_AVATARS } from '../shared/constants.js';
+import { TICK_RATE, DEFAULT_AVATARS, avatarFor, otherCharacter } from '../shared/constants.js';
 import { LEVELS } from '../shared/levels.js';
 import { LevelSim, DT } from './level.js';
 
@@ -47,7 +47,10 @@ export class Room {
 
   addPlayer(socket) {
     const index = this.players.some((p) => p.index === 0) ? 1 : 0;
-    const player = { id: socket.id, index, avatar: { ...DEFAULT_AVATARS[index] }, input: { x: 0, z: 0, brace: false }, jumpAt: -Infinity, body: null };
+    // May and Cody: a newcomer gets whichever doll is still free.
+    const taken = this.players[0]?.avatar.type;
+    const avatar = taken ? avatarFor(otherCharacter(taken)) : { ...DEFAULT_AVATARS[index] };
+    const player = { id: socket.id, index, avatar, input: { x: 0, z: 0, brace: false }, jumpAt: -Infinity, body: null };
     this.players.push(player);
     this.players.sort((a, b) => a.index - b.index);
     if (!this.hostId) this.hostId = socket.id;
@@ -58,6 +61,15 @@ export class Room {
     this.players = this.players.filter((p) => p.id !== id);
     if (this.hostId === id) this.hostId = this.players[0]?.id ?? null;
     if (this.players.length < 2) this.stopGame();
+  }
+
+  // Picking the doll your partner has swaps you both.
+  setCharacter(id, type) {
+    const player = this.getPlayer(id);
+    if (!player || !this.canChangeAvatar() || player.avatar.type === type) return false;
+    player.avatar = avatarFor(type);
+    for (const p of this.players) if (p !== player && p.avatar.type === type) p.avatar = avatarFor(otherCharacter(type));
+    return true;
   }
 
   setUnlocked(n) {

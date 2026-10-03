@@ -1,16 +1,17 @@
 import * as THREE from 'three';
 import { CHAIN } from '@shared/constants.js';
 
-const LINKS = 18;
+// Rose's red thread: short overlapping yarn segments, so it reads as one soft strand.
+const LINKS = 28;
+const SEG = 0.3;
 
 export function createChain(scene) {
-  const geo = new THREE.TorusGeometry(0.12, 0.042, 8, 18);
-  geo.scale(1.45, 1, 1);
+  const geo = new THREE.CapsuleGeometry(0.045, SEG, 3, 8);
+  geo.rotateZ(Math.PI / 2);
   const mat = new THREE.MeshStandardMaterial({
-    color: '#dcbd8c',
-    metalness: 0.85,
-    roughness: 0.28,
-    emissive: new THREE.Color('#ffae4a'),
+    color: '#d8314a',
+    roughness: 0.95,
+    emissive: new THREE.Color('#ff6f91'),
     emissiveIntensity: 0,
   });
   const mesh = new THREE.InstancedMesh(geo, mat, LINKS);
@@ -19,8 +20,8 @@ export function createChain(scene) {
   mesh.visible = false;
   scene.add(mesh);
 
-  const warm = new THREE.Color('#ffae4a');
-  const hot = new THREE.Color('#ff3a24');
+  const warm = new THREE.Color('#ff6f91');
+  const hot = new THREE.Color('#ff2d4a');
   const p = new THREE.Vector3();
   const x = new THREE.Vector3();
   const y = new THREE.Vector3();
@@ -28,7 +29,7 @@ export function createChain(scene) {
   const up = new THREE.Vector3(0, 1, 0);
   const alt = new THREE.Vector3(1, 0, 0);
   const m = new THREE.Matrix4();
-  const twist = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+  const stretch = new THREE.Matrix4();
   let tension = 0;
 
   return {
@@ -58,14 +59,15 @@ export function createChain(scene) {
         z.crossVectors(x, Math.abs(x.dot(up)) > 0.95 ? alt : up).normalize();
         y.crossVectors(z, x);
         m.makeBasis(x, y, z);
-        if (i % 2) m.multiply(twist);
+        // Each segment covers its share of the strand, with a little overlap.
+        m.multiply(stretch.makeScale(Math.max(0.2, (d / LINKS) * 1.25) / SEG, 1, 1));
         m.setPosition(p);
         mesh.setMatrixAt(i, m);
       }
       mesh.instanceMatrix.needsUpdate = true;
 
       mat.emissive.copy(warm).lerp(hot, tension);
-      mat.emissiveIntensity = tension * tension * 2.4 + (tension > 0.9 ? Math.sin(t * 32) * 0.5 + 0.5 : 0);
+      mat.emissiveIntensity = tension * tension * 1.6 + (tension > 0.9 ? Math.sin(t * 32) * 0.5 + 0.5 : 0);
     },
   };
 }

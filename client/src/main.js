@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PLAYER_RADIUS, SPAWN_SPREAD, METEOR } from '@shared/constants.js';
+import { PLAYER_RADIUS, SPAWN_SPREAD, METEOR, CHARACTERS, avatarFor } from '@shared/constants.js';
 import { LEVELS, levelById, levelIndex } from '@shared/levels.js';
 import { STORY, SPEAKERS } from '@shared/story.js';
 import { connect, SnapshotBuffer, TimedEvents } from './net.js';
@@ -85,7 +85,7 @@ const motion = [0, 1].map(() => ({ prev: new THREE.Vector3(), vel: new THREE.Vec
 const braceRings = [0, 1].map(() => {
   const m = new THREE.Mesh(
     new THREE.RingGeometry(0.55, 0.78, 40),
-    new THREE.MeshBasicMaterial({ color: '#b5c94a', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })
+    new THREE.MeshBasicMaterial({ color: '#ff7aa2', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })
   );
   m.rotation.x = -Math.PI / 2;
   m.renderOrder = 4;
@@ -159,9 +159,9 @@ function showPlaza() {
 // ---------- story ----------
 
 function speakerInfo(who) {
-  if (who === 'p1' || who === 'p2') {
-    const p = session.players.find((pl) => pl.index === (who === 'p1' ? 0 : 1));
-    if (!p) return { name: 'Guardian', color: '#ffc25e' };
+  if (CREATURES[who]) {
+    const p = session.players.find((pl) => pl.avatar.type === who);
+    if (!p) return { name: CREATURES[who].label, color: CHARACTERS[who].color, image: portraits.get(avatarFor(who)) };
     const label = CREATURES[p.avatar.type].label;
     return { name: p.id === socket.id ? `${label} (you)` : label, color: p.avatar.color, image: portraits.get(p.avatar) };
   }
@@ -203,7 +203,6 @@ const ui = createUI({
     backToLobby: enterLobby,
     togglePause: () => setPaused(!paused),
     pickCreature: (type) => pickAvatar({ type }),
-    pickColor: (color) => pickAvatar({ color }),
   },
 });
 
@@ -354,15 +353,16 @@ socket.on('disconnect', () => {
 
 socket.on('connect_error', () => ui.setConnected(false, session.everConnected));
 
-function joinedRoom(code) {
+function joinedRoom(code, { host = false } = {}) {
   session.code = code;
   session.players = [];
-  const pref = stored('itt:avatar', null);
-  if (pref) socket.emit('set-avatar', pref);
+  // The host gets their usual doll; a joining player takes whichever is free.
+  const pref = host ? stored('itt:avatar', null) : null;
+  if (pref) socket.emit('set-avatar', { type: pref.type });
   enterLobby();
 }
 
-socket.on('room-created', ({ code }) => joinedRoom(code));
+socket.on('room-created', ({ code }) => joinedRoom(code, { host: true }));
 socket.on('room-joined', ({ code }) => {
   audio.join();
   joinedRoom(code);
@@ -417,7 +417,7 @@ socket.on('opponent-left', () => {
   session.phase = 'notice';
   ui.showNotice({
     title: 'Your teammate left',
-    text: 'The Oathchain went slack. Keep the room open for someone new, or head back to the menu.',
+    text: 'The red thread went slack. Keep the room open for someone new, or head back to the menu.',
     canReturn: true,
   });
 });
@@ -497,17 +497,17 @@ function handleEvent(type, e) {
       cam.snap();
       setTimeout(() => ui.fade(false), 80);
       audio.respawn();
-      if (levelDef) ui.showHint(e.checkpoint >= 0 ? 'Back to the checkpoint — the chain holds.' : 'Back to the start — try again!', 2500);
+      if (levelDef) ui.showHint(e.checkpoint >= 0 ? 'Back to the checkpoint — the thread holds.' : 'Back to the start — try again!', 2500);
       break;
     case 'gem':
-      effects.sparkle(e.pos, '#5b8fe0', 26);
-      effects.hitBurst(e.pos, '#4066c6');
+      effects.sparkle(e.pos, '#ff6f91', 26);
+      effects.hitBurst(e.pos, '#e8334f');
       audio.gem();
       break;
     case 'checkpoint':
       audio.checkpoint();
       ui.banner('Checkpoint');
-      effects.sparkle([e.pos[0] + 2.4, e.pos[1] + 2.6, e.pos[2]], '#ffc25e', 30);
+      effects.sparkle([e.pos[0] + 2.4, e.pos[1] + 2.6, e.pos[2]], '#f6c94a', 30);
       break;
     case 'hint': {
       const hint = levelDef?.hints?.[e.index];
@@ -516,7 +516,7 @@ function handleEvent(type, e) {
     }
     case 'pad':
       audio.pad();
-      effects.sparkle([e.pos[0], e.pos[1] + 0.4, e.pos[2]], '#a8c4ff', 18);
+      effects.sparkle([e.pos[0], e.pos[1] + 0.4, e.pos[2]], '#ffd36b', 18);
       levelView?.padKick((levelDef.pads ?? []).findIndex((p) => p.pos[0] === e.pos[0] && p.pos[2] === e.pos[2]));
       break;
     case 'plate':
@@ -534,7 +534,7 @@ function handleEvent(type, e) {
       break;
     case 'climb':
       audio.climb();
-      if (entry) effects.sparkle([entry.root.position.x, entry.root.position.y + 0.6, entry.root.position.z], '#dcbd8c', 8);
+      if (entry) effects.sparkle([entry.root.position.x, entry.root.position.y + 0.6, entry.root.position.z], '#d8314a', 8);
       break;
     case 'slam':
       audio.slam();
@@ -551,7 +551,7 @@ function handleEvent(type, e) {
       bossView?.strike();
       audio.strike();
       cam.addTrauma(0.85);
-      effects.hitBurst([0, 6, 0], '#c8d8ff');
+      effects.hitBurst([0, 6, 0], '#fff3b0');
       ui.banner(e.hp > 0 ? 'Direct hit!' : 'The Warden falls!');
       break;
     case 'boss-defeated':
@@ -602,7 +602,7 @@ function updateLevel(dt, t) {
   levelView.update(view, dt, t);
 
   if (!view) {
-    // Story staging: guardians idle at the spawn, facing the camera.
+    // Story staging: the dolls idle at the spawn, facing the camera.
     for (const p of session.players) {
       const entry = creatures[p.index];
       if (!entry) continue;

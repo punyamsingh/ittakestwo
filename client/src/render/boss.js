@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { BOSS } from '@shared/constants.js';
 import { createArm } from './spinner.js';
 import { runeTexture, textures } from './textures.js';
+import { heartGeometry } from './platforms.js';
 
 const ARM_OFFSETS = [0, Math.PI, Math.PI / 2];
 
@@ -26,11 +27,12 @@ export function createBossView(scene) {
   const root = new THREE.Group();
   scene.add(root);
 
-  const iron = new THREE.MeshStandardMaterial({ color: '#3d3530', metalness: 0.7, roughness: 0.35 });
-  const ironDark = new THREE.MeshStandardMaterial({ color: '#251d18', metalness: 0.6, roughness: 0.5 });
-  const gold = new THREE.MeshStandardMaterial({ color: '#ffcf7a', emissive: '#ff9d3c', emissiveIntensity: 0.9, metalness: 0.8, roughness: 0.3 });
-  const eye = new THREE.MeshStandardMaterial({ color: '#ffd0c0', emissive: '#ff3a24', emissiveIntensity: 3.5 });
-  const coreMat = new THREE.MeshStandardMaterial({ color: '#fff0d0', emissive: '#ff7a2e', emissiveIntensity: 3 });
+  // The Toolbox: chipped red enamel, steel trim, yellow latches and a grudge.
+  const iron = new THREE.MeshStandardMaterial({ color: '#d9452f', metalness: 0.35, roughness: 0.4 });
+  const ironDark = new THREE.MeshStandardMaterial({ color: '#8a9096', metalness: 0.7, roughness: 0.35 });
+  const gold = new THREE.MeshStandardMaterial({ color: '#f2c94c', metalness: 0.5, roughness: 0.35 });
+  const eye = new THREE.MeshStandardMaterial({ color: '#fff4d8', emissive: '#ffcf4a', emissiveIntensity: 3.5 });
+  const coreMat = new THREE.MeshStandardMaterial({ color: '#fff8d0', emissive: '#ffd24a', emissiveIntensity: 3 });
 
   // Pedestal (matches the physics hub).
   const base = new THREE.Mesh(new THREE.CylinderGeometry(BOSS.hubRadius, BOSS.hubRadius + 0.25, BOSS.hubHeight, 32), ironDark);
@@ -54,7 +56,7 @@ export function createBossView(scene) {
   torso.castShadow = true;
   const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.45, 1), coreMat);
   core.position.set(0, 1.35, 1.1);
-  const coreGlow = additiveSprite('#ff8a3c', 0.6, 2.6);
+  const coreGlow = additiveSprite('#ffd24a', 0.6, 2.6);
   coreGlow.position.copy(core.position);
   const shieldL = new THREE.Mesh(new RoundedBoxGeometry(0.75, 1.3, 0.2, 2, 0.08), gold);
   const shieldR = shieldL.clone();
@@ -64,12 +66,13 @@ export function createBossView(scene) {
 
   const head = new THREE.Group();
   head.position.set(0, 3.05, 0.1);
-  const skull = new THREE.Mesh(new RoundedBoxGeometry(1.6, 1.1, 1.4, 3, 0.3), iron);
+  const skull = new THREE.Mesh(new RoundedBoxGeometry(3.0, 0.9, 2.2, 3, 0.25), iron);
   skull.castShadow = true;
   const visor = new THREE.Mesh(new RoundedBoxGeometry(1.2, 0.22, 0.1, 2, 0.05), eye);
-  visor.position.set(0, 0.05, 0.71);
-  const crest = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.9, 4), gold);
-  crest.position.y = 0.85;
+  visor.position.set(0, 0.05, 1.11);
+  // The carry handle on the lid.
+  const crest = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.1, 8, 24, Math.PI), ironDark);
+  crest.position.y = 0.55;
   head.add(skull, visor, crest);
   body.add(head);
 
@@ -79,9 +82,13 @@ export function createBossView(scene) {
     const pad = new THREE.Mesh(new THREE.SphereGeometry(0.9, 20, 14), iron);
     pad.scale.set(1, 0.8, 1);
     pad.castShadow = true;
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.8, 6), gold);
+    // Screwdrivers bristle from the trays like spines.
+    const spike = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.8, 8), gold);
     spike.position.set(s * 0.35, 0.7, 0);
     spike.rotation.z = -s * 0.5;
+    const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, 0.6, 6), ironDark);
+    tip.position.y = 0.65;
+    spike.add(tip);
     g.add(pad, spike);
     body.add(g);
     return g;
@@ -99,7 +106,7 @@ export function createBossView(scene) {
   });
 
   const arms = ARM_OFFSETS.map(() => {
-    const arm = createArm({ length: BOSS.armReach, hubRadius: BOSS.hubRadius, energy: '#ff5a2e' });
+    const arm = createArm({ length: BOSS.armReach, hubRadius: BOSS.hubRadius, energy: '#ff2d4a' });
     arm.update(0, { presence: 0 });
     root.add(arm.pivot);
     return { arm, presence: 0 };
@@ -108,7 +115,7 @@ export function createBossView(scene) {
   // Shockwave rings
   const ringGeo = new THREE.TorusGeometry(1, 0.08, 6, 96);
   ringGeo.rotateX(Math.PI / 2);
-  const ringMat = new THREE.MeshBasicMaterial({ color: '#ffb35c', transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending });
+  const ringMat = new THREE.MeshBasicMaterial({ color: '#f2c94c', transparent: true, opacity: 0.9, depthWrite: false });
   const rings = Array.from({ length: 4 }, () => {
     const m = new THREE.Mesh(ringGeo, ringMat);
     m.position.y = 0.25;
@@ -122,31 +129,30 @@ export function createBossView(scene) {
     const g = new THREE.Group();
     const disc = new THREE.Mesh(
       new THREE.CircleGeometry(1.15, 40),
-      new THREE.MeshBasicMaterial({ map: runeTexture('#a8c4ff'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: 0 })
+      new THREE.MeshBasicMaterial({ map: runeTexture('#c8323c'), transparent: true, depthWrite: false, opacity: 0 })
     );
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = 0.05;
-    const pillar = additiveSprite('#7fa2ff', 0, 3);
+    const pillar = additiveSprite('#ffe08a', 0, 3);
     pillar.position.y = 1.2;
     pillar.scale.set(1.6, 4, 1);
     g.add(disc, pillar);
     root.add(g);
     return { g, disc, pillar, level: 0 };
   });
-  const arcMat = new THREE.MeshBasicMaterial({ color: '#c8d8ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const arcMat = new THREE.MeshBasicMaterial({ color: '#fff3b0', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   let arcMesh = null;
-  const boltMat = new THREE.MeshBasicMaterial({ color: '#eef2ff', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  const boltMat = new THREE.MeshBasicMaterial({ color: '#fff8d0', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
   let boltMeshes = [];
   let boltT = 0;
 
-  // Defeat: the Heartstone shard rises from the wreck.
+  // Defeat: a big heart rises from the burst-open box.
   const shard = new THREE.Group();
   const shardMesh = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.6, 0),
-    new THREE.MeshStandardMaterial({ color: '#c8d8ff', emissive: '#4066c6', emissiveIntensity: 3, roughness: 0.1 })
+    heartGeometry(0.8, 0.35),
+    new THREE.MeshStandardMaterial({ color: '#ff5a76', emissive: '#d8314a', emissiveIntensity: 2, roughness: 0.25 })
   );
-  shardMesh.scale.y = 1.7;
-  shard.add(shardMesh, additiveSprite('#5b8fe0', 0.9, 5));
+  shard.add(shardMesh, additiveSprite('#ff7a95', 0.8, 5));
   shard.visible = false;
   root.add(shard);
 
@@ -187,7 +193,7 @@ export function createBossView(scene) {
     update(state, dt, t, players = []) {
       if (!state) return;
 
-      // Face the nearest guardian.
+      // Face the nearest doll.
       let target = null;
       let best = Infinity;
       for (const p of players) {
@@ -203,7 +209,7 @@ export function createBossView(scene) {
         body.rotation.y += diff * (1 - Math.exp(-dt * (state.attack === 'sweep' ? 1 : 3)));
       }
 
-      // Fade the Warden when it stands between the camera (south) and a guardian.
+      // Fade the Toolbox when it stands between the camera (south) and a doll.
       const hidden = players.some((p) => p.z < -1.5 && Math.abs(p.x) < 4.5);
       ghost += ((hidden ? 1 : 0) - ghost) * (1 - Math.exp(-dt * 8));
       for (const m of fadeMats) {
