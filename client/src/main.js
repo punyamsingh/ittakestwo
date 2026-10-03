@@ -60,7 +60,7 @@ function store(key, value) {
   }
 }
 
-const progress = stored('tetherlings:progress', { unlocked: 0, gems: {} });
+const progress = stored('itt:progress', { unlocked: 0, gems: {} });
 progress.gems ??= {};
 
 const session = {
@@ -211,7 +211,7 @@ function pickAvatar(change) {
   const self = me();
   if (!self) return;
   self.avatar = { ...self.avatar, ...change };
-  store('tetherlings:avatar', self.avatar);
+  store('itt:avatar', self.avatar);
   socket.emit('set-avatar', self.avatar);
   refreshLobby();
 }
@@ -307,7 +307,7 @@ function beginLevel(def, players) {
 function saveProgress(def, stats, unlocked) {
   progress.unlocked = Math.max(progress.unlocked ?? 0, unlocked);
   progress.gems[def.id] = Math.max(progress.gems[def.id] ?? 0, stats.gems);
-  store('tetherlings:progress', progress);
+  store('itt:progress', progress);
 }
 
 async function completeLevel({ levelId, stats, unlocked, hasNext }) {
@@ -357,7 +357,7 @@ socket.on('connect_error', () => ui.setConnected(false, session.everConnected));
 function joinedRoom(code) {
   session.code = code;
   session.players = [];
-  const pref = stored('tetherlings:avatar', null);
+  const pref = stored('itt:avatar', null);
   if (pref) socket.emit('set-avatar', pref);
   enterLobby();
 }
@@ -722,4 +722,4 @@ ui.setConnected(false, false);
 frame();
 
 // Dev-only handle for automated playtesting.
-if (import.meta.env.DEV) window.__tetherlings = { session, snapshots, scene, views: () => ({ levelView, bossView }) };
+if (import.meta.env.DEV) window.__itt = { session, snapshots, scene, views: () => ({ levelView, bossView }) };

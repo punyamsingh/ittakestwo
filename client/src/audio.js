@@ -1,6 +1,6 @@
 // Procedural sound effects: every sound is synthesized, so there are no assets to load.
 
-const STORAGE_KEY = 'tetherlings:muted';
+const STORAGE_KEY = 'itt:muted';
 
 function loadMuted() {
   try {

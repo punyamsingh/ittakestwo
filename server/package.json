@@ -1,5 +1,5 @@
 {
-  "name": "tetherlings-server",
+  "name": "it-takes-two-online-server",
   "private": true,
   "type": "module",
   "scripts": {

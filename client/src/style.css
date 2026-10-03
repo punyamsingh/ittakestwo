@@ -1955,3 +1955,19 @@ kbd {
     height: 30px;
   }
 }
+
+.wordmark-gap {
+  display: inline-block;
+  width: 0.28em;
+}
+
+.wordmark-sub {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.3em;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-indent: 0.32em;
+  color: #ffc6e2;
+  -webkit-text-fill-color: #ffc6e2;
+}

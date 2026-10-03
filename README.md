@@ -1,4 +1,4 @@
-# Tetherlings
+# It Takes Two - Online
 
 A two-player online co-op adventure. Two guardians, bound together by a cursed chain, climb the shattered World Spire to break it — through a story campaign of hand-built platforming levels and a boss fight.
 
