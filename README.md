@@ -39,6 +39,7 @@ Tests: `npm test` — level data validation, co-op mechanics in real level layou
 - **Jump:** Space / gamepad A — while dangling below a braced partner, Jump climbs the thread
 - **Brace:** hold Shift or E / gamepad B or RB — you can't be dragged or blown away, so your partner can hang off the thread
 - **Pause:** Esc
+- **Menus:** arrow keys / W S to move, Enter to select, Esc to go back
 
 ## Project layout
 
@@ -55,7 +56,8 @@ server/
   test/                 node:test suites
 client/
   src/main.js           session flow, socket events, frame loop
-  src/ui.js             menu, lobby + chapter map, story dialogue, HUD, results, pause
+  src/ui.js             title screen, keyboard-driven menus, lobby + chapter map,
+                        cutscenes, co-op HUD, results, pause
   src/net.js            snapshot interpolation and time-synced event playback
   src/audio.js          procedural WebAudio sound effects
   src/render/           renderer + post, sky/environment, level & platform builders,

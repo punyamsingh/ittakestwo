@@ -13,6 +13,11 @@ const EMBLEMS = {
   narrator: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 16c8-4 16-4 24 2v32c-8-6-16-6-24-2z" fill="#fbf3e4" stroke="#7a5a3c" stroke-width="2"/><path d="M56 16c-8-4-16-4-24 2v32c8-6 16-6 24-2z" fill="#f0e2c6" stroke="#7a5a3c" stroke-width="2"/><path d="M32 30c-2-3-6-1-4 2l4 3 4-3c2-3-2-5-4-2z" fill="#c8323c"/></svg>`,
 };
 
+const ICONS = {
+  lock: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zm2 0h6V8a3 3 0 0 0-6 0z"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3 6.6 7.1.8-5.3 4.9 1.5 7.1L12 17.8l-6.3 3.6 1.5-7.1L1.9 9.4 9 8.6z"/></svg>`,
+};
+
 function escapeHtml(text) {
   return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
@@ -33,15 +38,87 @@ export function createUI({ portraits, audio, on }) {
   let hintTimer = 0;
   let controlsTimer = 0;
 
+  const root = $('ui');
+
   function show(name) {
+    const changed = current !== name;
     current = name;
+    root.dataset.screen = name;
     for (const [key, el] of Object.entries(screens)) {
       const active = key === name;
       el.classList.toggle('is-active', active);
       el.inert = !active;
     }
+    if (name !== 'menu') closePane();
+    if (changed && NAV_SCREENS.has(name)) focusFirst(screens[name]);
   }
-  show('menu');
+
+  // ---------- menu navigation ----------
+
+  // Menus are driven like a console game: arrows move a single selection,
+  // Enter picks it, and the mouse just moves the same selection around.
+  const NAV_SCREENS = new Set(['menu', 'complete', 'chapter', 'disconnected']);
+  const navItems = (scope) => [...scope.querySelectorAll('[data-nav]')].filter((el) => !el.disabled && el.offsetParent !== null);
+
+  function select(el) {
+    for (const other of document.querySelectorAll('[data-nav].is-selected')) if (other !== el) other.classList.remove('is-selected');
+    el?.classList.add('is-selected');
+  }
+
+  function focusFirst(scope) {
+    requestAnimationFrame(() => {
+      const first = navItems(scope)[0];
+      first?.focus({ preventScroll: true });
+      select(first);
+    });
+  }
+
+  function navScope() {
+    if (pauseEl.classList.contains('is-open')) return pauseEl;
+    if (current === 'menu' && openPane) return openPane;
+    return NAV_SCREENS.has(current) ? screens[current] : null;
+  }
+
+  document.addEventListener('focusin', (e) => {
+    if (e.target.matches?.('[data-nav]')) select(e.target);
+  });
+  document.addEventListener('pointerover', (e) => {
+    const el = e.target.closest?.('[data-nav]');
+    if (el && !el.disabled && el !== document.activeElement && navScope()?.contains(el)) {
+      el.focus({ preventScroll: true });
+      select(el);
+      audio.blip();
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    const scope = navScope();
+    if (!scope || e.target?.tagName === 'INPUT') return;
+    const step = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1, KeyW: -1, KeyS: 1 }[e.code];
+    if (!step) return;
+    e.preventDefault();
+    const items = navItems(scope);
+    if (!items.length) return;
+    const at = items.indexOf(document.activeElement);
+    const next = at < 0 ? items[0] : items[(at + step + items.length) % items.length];
+    next.focus({ preventScroll: true });
+    select(next);
+    audio.blip();
+  });
+
+  // ---------- title ----------
+
+  function leaveTitle() {
+    if (current !== 'title') return;
+    audio.select();
+    show('menu');
+  }
+  screens.title.addEventListener('pointerdown', leaveTitle);
+  window.addEventListener('keydown', (e) => {
+    if (current !== 'title' || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
+    e.preventDefault();
+    leaveTitle();
+  });
 
   function toast(text) {
     const el = $('toast');
@@ -55,7 +132,7 @@ export function createUI({ portraits, audio, on }) {
   }
 
   document.addEventListener('click', (e) => {
-    if (e.target.closest('button:not(.creature-btn):not(.level-card)')) audio.click();
+    if (e.target.closest('button:not(.doll-card):not(.level-card)')) audio.click();
   });
 
   // ---------- menu ----------
@@ -64,28 +141,78 @@ export function createUI({ portraits, audio, on }) {
   // rather than being swallowed by a disabled button.
   let connected = false;
   let pending = null;
+  const labelOf = (btn) => btn.querySelector('[data-label]') ?? btn;
   function whenConnected(btn, action) {
     if (connected) return action();
-    if (pending) pending.btn.textContent = pending.label;
-    pending = { btn, label: btn.textContent, action };
-    btn.textContent = 'Connecting…';
+    if (pending) labelOf(pending.btn).textContent = pending.label;
+    pending = { btn, label: labelOf(btn).textContent, action };
+    labelOf(btn).textContent = 'Connecting…';
     btn.setAttribute('aria-busy', 'true');
   }
   function flushPending() {
     if (!pending) return;
     const { btn, label, action } = pending;
     pending = null;
-    btn.textContent = label;
+    labelOf(btn).textContent = label;
     btn.removeAttribute('aria-busy');
     action();
   }
 
+  let openPane = null;
+  function setPane(id) {
+    const next = id ? $(`${id}-pane`) : null;
+    if (next === openPane) return;
+    openPane?.setAttribute('hidden', '');
+    for (const btn of document.querySelectorAll('[data-pane]')) btn.setAttribute('aria-expanded', String(btn.dataset.pane === id));
+    openPane = next;
+    screens.menu.classList.toggle('has-pane', !!next);
+    if (next) {
+      next.removeAttribute('hidden');
+      if (next.id === 'join-pane') requestAnimationFrame(() => joinInput.focus());
+      else focusFirst(next);
+    }
+  }
+  function closePane() {
+    if (!openPane) return;
+    const opener = document.querySelector(`[data-pane="${openPane.id.replace('-pane', '')}"]`);
+    setPane(null);
+    if (current === 'menu') opener?.focus({ preventScroll: true });
+  }
+  for (const btn of document.querySelectorAll('[data-pane]')) btn.addEventListener('click', () => setPane(openPane?.id === `${btn.dataset.pane}-pane` ? null : btn.dataset.pane));
+  for (const btn of document.querySelectorAll('[data-close-pane]')) btn.addEventListener('click', closePane);
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape' && current === 'menu' && openPane) {
+      e.preventDefault();
+      closePane();
+    }
+  });
+
   const joinInput = $('join-input');
-  $('create-btn').addEventListener('click', () => whenConnected($('create-btn'), () => on.create()));
+  const codeCells = [...$('code-cells').children];
+  function renderCode() {
+    const value = joinInput.value;
+    codeCells.forEach((cell, i) => {
+      cell.textContent = value[i] ?? '';
+      cell.classList.toggle('is-filled', i < value.length);
+      cell.classList.toggle('is-current', i === Math.min(value.length, 3));
+    });
+  }
+  renderCode();
+  $('create-btn').addEventListener('click', () => {
+    setPane(null);
+    whenConnected($('create-btn'), () => on.create());
+  });
   joinInput.addEventListener('input', () => {
     joinInput.value = joinInput.value.toUpperCase().replace(CODE_CHARS, '').slice(0, 4);
     $('join-error').textContent = '';
-    joinInput.classList.remove('is-shaking');
+    joinInput.parentElement.classList.remove('is-shaking');
+    renderCode();
+  });
+  joinInput.addEventListener('keydown', (e) => {
+    if (e.code === 'ArrowDown') {
+      e.preventDefault();
+      $('join-btn').focus();
+    }
   });
   $('join-form').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -95,29 +222,30 @@ export function createUI({ portraits, audio, on }) {
   });
 
   function joinError(message) {
+    if (current === 'menu') setPane('join');
     $('join-error').textContent = message;
-    joinInput.classList.remove('is-shaking');
-    void joinInput.offsetWidth;
-    joinInput.classList.add('is-shaking');
+    const field = joinInput.parentElement;
+    field.classList.remove('is-shaking');
+    void field.offsetWidth;
+    field.classList.add('is-shaking');
     audio.error();
   }
 
   // ---------- lobby ----------
 
-  const creatureButtons = CHARACTER_TYPES.map((type) => {
+  const dollCards = CHARACTER_TYPES.map((type) => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'creature-btn';
+    btn.className = 'doll-card';
     btn.setAttribute('role', 'radio');
     btn.dataset.type = type;
-    btn.title = CREATURES[type].blurb;
     btn.setAttribute('aria-label', `${CREATURES[type].label} — ${CREATURES[type].blurb}`);
-    btn.innerHTML = `<img alt="" /><span>${CREATURES[type].label}</span><small>${CREATURES[type].blurb}</small>`;
+    btn.innerHTML = `<img class="doll-portrait" alt="" /><span><span class="doll-name">${CREATURES[type].label}</span><span class="doll-blurb">${CREATURES[type].blurb}</span><span class="doll-owner"></span></span>`;
     btn.addEventListener('click', () => {
       audio.select();
       on.pickCreature(type);
     });
-    $('creature-grid').appendChild(btn);
+    $('doll-cards').appendChild(btn);
     return btn;
   });
 
@@ -147,30 +275,17 @@ export function createUI({ portraits, audio, on }) {
   $('leave-btn').addEventListener('click', () => on.leave());
   $('start-btn').addEventListener('click', () => on.start());
 
-  function renderSlot(el, player, name, emptyText) {
-    el.classList.toggle('is-empty', !player);
-    if (player) {
-      el.querySelector('img').src = portraits.get(player.avatar);
-      el.style.setProperty('--accent', player.avatar.color);
-      el.querySelector('.slot-sub').textContent = CREATURES[player.avatar.type].label;
-    } else {
-      el.style.removeProperty('--accent');
-      el.querySelector('.slot-sub').textContent = emptyText;
-    }
-    el.querySelector('.slot-name').textContent = name;
-  }
-
   function renderLobby({ code, me, mate, isHost, levelIndex, unlocked, progress }) {
     $('room-code').textContent = code;
-    renderSlot($('slot-me'), me, isHost ? 'You · host' : 'You', '');
-    renderSlot($('slot-mate'), mate, mate && !isHost ? 'Teammate · host' : 'Teammate', 'Waiting to join…');
-    if (me) {
-      for (const btn of creatureButtons) {
-        const type = btn.dataset.type;
-        btn.setAttribute('aria-checked', String(type === me.avatar.type));
-        btn.style.setProperty('--accent', CHARACTERS[type].color);
-        btn.querySelector('img').src = portraits.get({ type, color: CHARACTERS[type].color });
-      }
+    for (const card of dollCards) {
+      const type = card.dataset.type;
+      const owner = me?.avatar.type === type ? 'me' : mate?.avatar.type === type ? 'mate' : 'open';
+      card.dataset.owner = owner;
+      card.setAttribute('aria-checked', String(owner === 'me'));
+      const img = card.querySelector('img');
+      if (!img.src) img.src = portraits.get({ type, color: CHARACTERS[type].color });
+      card.querySelector('.doll-owner').textContent =
+        owner === 'me' ? (isHost ? 'You · Host' : 'You') : owner === 'mate' ? (isHost ? 'Partner' : 'Partner · Host') : 'Waiting for partner';
     }
 
     levelButtons.forEach((btn, i) => {
@@ -181,7 +296,7 @@ export function createUI({ portraits, audio, on }) {
       btn.classList.toggle('is-locked', locked);
       btn.disabled = locked || !isHost;
       btn.setAttribute('aria-pressed', String(i === levelIndex));
-      btn.innerHTML = `<span class="level-num">${locked ? '🔒' : def.boss ? '★' : i + 1}</span>
+      btn.innerHTML = `<span class="level-num">${locked ? ICONS.lock : def.boss ? ICONS.star : i + 1}</span>
         <span><span class="level-name">${escapeHtml(def.name)}</span><span class="level-sub">${locked ? 'Locked' : escapeHtml(def.tagline)}</span></span>
         <span class="shards" aria-label="${got} of ${total} hearts">${total ? shardRow(got, total) : ''}</span>`;
     });
@@ -191,11 +306,11 @@ export function createUI({ portraits, audio, on }) {
     const name = LEVELS[levelIndex]?.name ?? '';
     if (!mate) {
       start.disabled = true;
-      start.textContent = 'Waiting for teammate…';
+      start.textContent = 'Waiting for partner…';
       hint.textContent = 'Share the code — your friend joins from the main menu.';
     } else if (isHost) {
       start.disabled = false;
-      start.textContent = `Begin · ${name}`;
+      start.textContent = `Play · ${name}`;
       hint.textContent = 'Pick any unlocked level. Your partner follows your lead.';
     } else {
       start.disabled = true;
@@ -310,14 +425,46 @@ export function createUI({ portraits, audio, on }) {
 
   // ---------- level HUD ----------
 
-  function startLevel({ def, index }) {
+  const playerCards = [];
+
+  function renderPlayers(players) {
+    const el = $('hud-players');
+    el.innerHTML = '';
+    playerCards.length = 0;
+    // May on the left, Cody on the right, whatever slot they joined in.
+    const ordered = [...players].sort((a, b) => CHARACTER_TYPES.indexOf(a.type) - CHARACTER_TYPES.indexOf(b.type));
+    ordered.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = `hp-card${i === 1 ? ' hp-card--right' : ''}${p.me ? ' is-me' : ''}`;
+      card.style.setProperty('--accent', p.color);
+      card.innerHTML = `<img class="hp-portrait" alt="" src="${p.image}" /><div><p class="hp-name">${escapeHtml(CREATURES[p.type].label)}</p><p class="hp-state">${p.me ? '' : 'Partner'}</p></div>`;
+      el.appendChild(card);
+      playerCards[p.index] = { card, state: card.querySelector('.hp-state'), me: p.me, key: '' };
+    });
+  }
+
+  function setPlayerState(index, { braced, alive }) {
+    const entry = playerCards[index];
+    if (!entry) return;
+    const key = `${braced}|${alive}`;
+    if (key === entry.key) return;
+    entry.key = key;
+    entry.card.classList.toggle('is-braced', braced && alive);
+    entry.card.classList.toggle('is-down', !alive);
+    entry.state.textContent = !alive ? 'Falling…' : braced ? 'Braced' : entry.me ? '' : 'Partner';
+  }
+
+  function startLevel({ def, index, players = [] }) {
     const hud = screens.hud;
     hud.classList.toggle('is-boss', !!def.boss);
-    $('hud-level-kicker').textContent = def.boss ? 'Boss' : `Level ${index + 1}`;
+    $('hud-level-kicker').textContent = def.boss ? 'Chapter one · Final battle' : `Chapter one · Level ${index + 1}`;
     $('hud-level-name').textContent = def.name;
     const total = def.gems?.length ?? 0;
     $('hud-gems').innerHTML = shardRow(0, total).replace(/style="[^"]*"/g, '');
     $('hud-gems').dataset.got = '0';
+    $('hud-gem-count').textContent = `0/${total}`;
+    $('hud-gems').parentElement.hidden = !total;
+    renderPlayers(players);
     $('hud-hint').classList.remove('is-showing');
     setTime(0);
     setBrace(false);
@@ -339,6 +486,7 @@ export function createUI({ portraits, audio, on }) {
     if (String(got) === el.dataset.got) return;
     el.dataset.got = String(got);
     [...el.children].forEach((s, i) => s.classList.toggle('is-got', i < got));
+    $('hud-gem-count').textContent = `${got}/${el.children.length}`;
   }
 
   function showHint(text, ms = 7000) {
@@ -390,6 +538,7 @@ export function createUI({ portraits, audio, on }) {
     $('replay-btn').disabled = false;
     $('map-btn').disabled = !isHost;
     show('complete');
+    focusFirst(screens.complete);
   }
 
   function showChapter({ gems, total, isHost }) {
@@ -404,6 +553,7 @@ export function createUI({ portraits, audio, on }) {
     $('disconnect-text').textContent = text;
     $('back-to-lobby-btn').hidden = !canReturn;
     show('disconnected');
+    focusFirst(screens.disconnected);
   }
 
   const pauseEl = $('pause');
@@ -411,6 +561,7 @@ export function createUI({ portraits, audio, on }) {
     pauseEl.classList.toggle('is-open', open);
     pauseEl.inert = !open;
     $('pause-map-btn').disabled = !isHost;
+    $('pause-map-btn').hidden = !isHost;
     if (open) $('resume-btn').focus();
   }
   pauseEl.inert = true;
@@ -447,6 +598,9 @@ export function createUI({ portraits, audio, on }) {
   });
   renderMute();
 
+  $('boss-emblem').innerHTML = EMBLEMS.toolbox;
+  show('title');
+
   return {
     get current() {
       return current;
@@ -457,6 +611,7 @@ export function createUI({ portraits, audio, on }) {
     clearJoin() {
       joinInput.value = '';
       $('join-error').textContent = '';
+      renderCode();
     },
     renderLobby,
     playStory,
@@ -467,6 +622,7 @@ export function createUI({ portraits, audio, on }) {
     setGems,
     showHint,
     setBrace,
+    setPlayerState,
     setBoss,
     banner,
     showComplete,
