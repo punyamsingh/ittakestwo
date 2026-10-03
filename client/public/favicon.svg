@@ -13,12 +13,15 @@
   <rect x="31" y="29" width="14" height="9" rx="4.5" fill="none" stroke="#ffd36e" stroke-width="3"/>
   <!-- pink -->
   <circle cx="15" cy="33" r="11" fill="#ff8fbf" stroke="#2a1240" stroke-width="3"/>
-  <circle cx="11.5" cy="32" r="2.4" fill="#2a1240"/>
-  <circle cx="18.5" cy="32" r="2.4" fill="#2a1240"/>
+  <path d="M9 29.5 L13 32 L9 34.5 M21 29.5 L17 32 L21 34.5" fill="none" stroke="#2a1240" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11.5 37 Q15 41 18.5 37 Z" fill="#fff" stroke="#2a1240" stroke-width="1.6" stroke-linejoin="round"/>
   <circle cx="10.5" cy="27" r="2.6" fill="#fff" opacity="0.5"/>
   <!-- gold -->
   <circle cx="49" cy="33" r="11" fill="#ffcf66" stroke="#2a1240" stroke-width="3"/>
-  <circle cx="45.5" cy="32" r="2.4" fill="#2a1240"/>
-  <circle cx="52.5" cy="32" r="2.4" fill="#2a1240"/>
+  <circle cx="45.5" cy="31" r="2.6" fill="#2a1240"/>
+  <circle cx="52.5" cy="31" r="2.6" fill="#2a1240"/>
+  <circle cx="46.3" cy="30.2" r="0.9" fill="#fff"/>
+  <circle cx="53.3" cy="30.2" r="0.9" fill="#fff"/>
+  <path d="M46 36.5 Q49 42 52 36.5 Z" fill="#8a2345" stroke="#2a1240" stroke-width="1.6" stroke-linejoin="round"/>
   <circle cx="44.5" cy="27" r="2.6" fill="#fff" opacity="0.55"/>
 </svg>

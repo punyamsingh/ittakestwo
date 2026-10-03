@@ -353,7 +353,20 @@ function cat(pal, mats) {
   body.scale.set(1.22, 0.9, 1.1);
   const tummy = mesh(fluffGeo(0.4, 0.05, 10, 2), cream, 0, -0.06, 0.3);
   tummy.scale.set(1.05, 0.95, 0.62);
-  belly.add(body, tummy);
+  // Fur clumps break up the silhouette so the outline reads as floof.
+  const clumps = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2;
+    if (Math.cos(a) > 0.55) continue; // keep the tummy smooth and clean
+    const y = i % 2 ? 0.14 : -0.1;
+    // Sit each clump on the belly's surface, mostly sunk in, so only its edge breaks the outline.
+    const d = new THREE.Vector3(Math.sin(a) * 0.68, y, Math.cos(a) * 0.62);
+    d.multiplyScalar(0.84 / Math.hypot(d.x / 0.68, d.y / 0.5, d.z / 0.62));
+    const c = mesh(fluffGeo(0.17, 0.07, 7, i * 1.7), fur, d.x, d.y, d.z);
+    c.scale.set(1, 0.8, 1);
+    clumps.push(c);
+  }
+  belly.add(body, tummy, ...clumps);
   g.add(belly);
 
   // Lion's-mane ruff around the neck, the Persian signature.
@@ -366,18 +379,18 @@ function cat(pal, mats) {
   const skull = mesh(fluffGeo(0.44, 0.05, 9, 4), fur);
   skull.scale.set(1.18, 0.92, 0.92);
   const cheeks = [1, -1].map((s) => {
-    const c = mesh(fluffGeo(0.2, 0.1, 12, 5 + s), fur, s * 0.34, -0.16, 0.08);
+    const c = mesh(fluffGeo(0.19, 0.07, 8, 5 + s), cream, s * 0.32, -0.16, 0.1);
     c.scale.set(1, 0.85, 0.9);
     return c;
   });
 
   // Flat face: big eyes set wide, a tiny nose pushed right up between them.
-  const eyes = makeEyes(0.13, 0.18, 0.22);
-  eyes.position.set(0, 0.04, 0.32);
-  const lidGeo = new THREE.SphereGeometry(0.141, 18, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
+  const eyes = makeEyes(0.145, 0.185, 0.22);
+  eyes.position.set(0, 0.05, 0.32);
+  const lidGeo = new THREE.SphereGeometry(0.156, 18, 8, 0, Math.PI * 2, 0, Math.PI * 0.4);
   for (const eye of eyes.children) {
     const lid = mesh(lidGeo, fur);
-    lid.rotation.x = 0.42; // heavy lids = the famous unimpressed stare
+    lid.rotation.x = -0.12; // lids resting on top: a content, sleepy-sweet look
     eye.add(lid);
   }
   const noseMesh = mesh(new THREE.SphereGeometry(0.045, 12, 8), nose, 0, -0.07, 0.42);
@@ -414,7 +427,12 @@ function cat(pal, mats) {
     ear.userData.baseZ = ear.rotation.z;
     return ear;
   });
-  head.add(skull, ...cheeks, eyes, noseMesh, ...pads, mouth, ...whiskers, ...ears, blush(0.27, -0.1, 0.33, 0.075), blush(-0.27, -0.1, 0.33, 0.075));
+  const crown = [
+    [0, 0.4, 0.04, 0.09],
+    [0.08, 0.37, 0.0, 0.07],
+    [-0.08, 0.37, 0.0, 0.07],
+  ].map(([x, y, z, r], i) => mesh(fluffGeo(r, 0.16, 12, i + 9), fur, x, y, z));
+  head.add(skull, ...cheeks, ...crown, eyes, noseMesh, ...pads, mouth, ...whiskers, ...ears, blush(0.27, -0.1, 0.33, 0.075), blush(-0.27, -0.1, 0.33, 0.075));
   g.add(head);
 
   // Stubby paws peeking out from under all that floof.
@@ -439,7 +457,7 @@ function cat(pal, mats) {
     [0.17, 0, 0.3, -0.3],
     [0.14, 0, 0.5, -0.28],
     [0.1, 0, 0.64, -0.18],
-  ].forEach(([r, x, y, z], i) => tail.add(mesh(fluffGeo(r, 0.14, 12, i * 2.3), i === 4 ? cream : deep, x, y, z)));
+  ].forEach(([r, x, y, z], i) => tail.add(mesh(fluffGeo(r, 0.08, 8, i * 2.3), i === 4 ? cream : deep, x, y, z)));
   g.add(tail);
 
   return { group: g, height: 1.65, parts: { head, eyes, belly, ruff, ears, tail, paws } };

@@ -186,9 +186,9 @@ h2 {
 }
 
 .logo-mark {
-  width: 132px;
+  width: 176px;
   height: auto;
-  margin-bottom: -6px;
+  margin: -6px 0 -10px;
   filter: drop-shadow(0 6px 14px rgba(255, 120, 170, 0.35));
   user-select: none;
   -webkit-user-drag: none;
@@ -1890,6 +1890,68 @@ kbd {
 
 @media (max-width: 480px) {
   .logo-mark {
-    width: 108px;
+    width: 140px;
+  }
+}
+
+/* Wordmark letters hop in a wave, like they're tugging each other along. */
+.logo h1:has(.wordmark) {
+  background: none;
+  white-space: nowrap;
+}
+
+.wordmark {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.wordmark span {
+  display: inline-block;
+  color: transparent;
+  background: linear-gradient(180deg, #fff4fb 5%, #ffc6e2 45%, #ff9f8c 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: letter-hop 2.8s var(--ease-back) infinite;
+  animation-delay: calc(var(--i) * 0.07s);
+}
+
+@keyframes letter-hop {
+  0%,
+  55%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  22% {
+    transform: translateY(-7px) rotate(-4deg);
+  }
+  38% {
+    transform: translateY(1px) rotate(2deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .logo h1 {
+    font-size: 56px;
+  }
+}
+
+/* Five guardians and seven colours need a tighter fit on phones. */
+@media (max-width: 480px) {
+  .creature-grid {
+    gap: 4px;
+  }
+
+  .creature-btn {
+    padding: 4px 2px 6px;
+    font-size: 12px;
+  }
+
+  .color-grid {
+    gap: 7px;
+  }
+
+  .swatch {
+    width: 30px;
+    height: 30px;
   }
 }

@@ -72,7 +72,7 @@ export const BOSS = {
 };
 
 export const CREATURE_TYPES = ['dragon', 'golem', 'slime', 'robot', 'cat'];
-export const COLOR_SWATCHES = ['#ff5d5d', '#5da9ff', '#6be39a', '#ffc94d', '#b98bff', '#ff8fd0'];
+export const COLOR_SWATCHES = ['#ff5d5d', '#5da9ff', '#6be39a', '#ffc94d', '#b98bff', '#ff8fd0', '#f5efe8'];
 export const DEFAULT_AVATARS = [
   { type: 'dragon', color: '#ff5d5d' },
   { type: 'golem', color: '#5da9ff' },
