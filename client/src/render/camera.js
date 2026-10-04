@@ -42,6 +42,7 @@ export function createCameraRig(camera) {
         const a = t * 0.05 + 0.6;
         wantPos.set(Math.cos(a) * 30, 15, Math.sin(a) * 30);
         wantLook.set(0, -1.5, 0);
+        shiftTarget = insetLeft / 2;
         rate = 1.2;
       } else if (mode === 'lobby') {
         wantPos.set(0, 2.5, 11.2);
@@ -51,7 +52,7 @@ export function createCameraRig(camera) {
       } else if (mode === 'arena') {
         const f = focus ?? look;
         const zoom = 1 + Math.max(0, spread - 4) * 0.05;
-        // Steep and player-following, so the Warden's bulk doesn't hide anyone behind it.
+        // Steep and player-following, so the Toolbox's bulk doesn't hide anyone behind it.
         wantLook.set(f.x * 0.6, 0.5, f.z * 0.6 + 0.5);
         wantPos.set(wantLook.x, 21 * zoom, wantLook.z + 10.5 * zoom);
         rate = 3;

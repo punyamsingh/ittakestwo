@@ -297,7 +297,11 @@ function beginLevel(def, players) {
   meteors.clear();
   stageAtSpawn(def);
   ui.fade(false);
-  ui.startLevel({ def, index: session.levelIndex });
+  ui.startLevel({
+    def,
+    index: session.levelIndex,
+    players: players.map((p) => ({ index: p.index, type: p.avatar.type, color: p.avatar.color, me: p.id === socket.id, image: portraits.get(p.avatar) })),
+  });
   setPaused(false);
   cam.setMode(def.camera === 'arena' ? 'arena' : 'level');
   cam.snap();
@@ -378,7 +382,7 @@ socket.on('lobby-update', ({ players, hostId, levelIndex: li, unlocked }) => {
   if (session.phase === 'lobby') {
     if (!hadMate && mate()) {
       audio.join();
-      ui.toast('Your teammate joined!');
+      ui.toast('Your partner joined!');
     }
     refreshLobby();
   }
@@ -409,14 +413,14 @@ for (const type of ['jump', 'land', 'hit', 'impact', 'fell', 'respawn', 'gem', '
 
 socket.on('opponent-left', () => {
   if (session.phase === 'lobby') {
-    ui.toast('Your teammate left the room.');
+    ui.toast('Your partner left the room.');
     return;
   }
   if (session.phase === 'menu') return;
   input.setEnabled(false);
   session.phase = 'notice';
   ui.showNotice({
-    title: 'Your teammate left',
+    title: 'Your partner left',
     text: 'The red thread went slack. Keep the room open for someone new, or head back to the menu.',
     canReturn: true,
   });
@@ -552,7 +556,7 @@ function handleEvent(type, e) {
       audio.strike();
       cam.addTrauma(0.85);
       effects.hitBurst([0, 6, 0], '#fff3b0');
-      ui.banner(e.hp > 0 ? 'Direct hit!' : 'The Warden falls!');
+      ui.banner(e.hp > 0 ? 'Direct hit!' : 'The Toolbox is down!');
       break;
     case 'boss-defeated':
       audio.roar();
@@ -573,6 +577,7 @@ const anchorA = new THREE.Vector3();
 const anchorB = new THREE.Vector3();
 const lobbyPanel = document.querySelector('.panel--lobby');
 const mapPanel = document.querySelector('.panel--map');
+const menuCol = document.querySelector('.menu-col');
 let lastWind = [];
 let wasBraced = false;
 
@@ -639,6 +644,7 @@ function updateLevel(dt, t) {
     entry.root.position.copy(feet);
     animateCreature(entry, dt, t, { vel: m.vel, grounded: m.grounded, alive: p.alive, faceCamera: false, floorY });
 
+    ui.setPlayerState(p.index, { braced: p.braced, alive: p.alive });
     const ring = braceRings[p.index];
     ring.visible = p.braced && p.alive;
     if (ring.visible) {
@@ -704,6 +710,8 @@ function frame() {
 
   let camInput = {};
   if (session.phase === 'lobby') camInput = updateLobby(dt, t);
+  // On the main menu, swing the scene into the space right of the menu column.
+  else if (ui.current === 'menu' && window.innerWidth >= 900) camInput = { insetLeft: menuCol.getBoundingClientRect().right };
   else if (levelView) camInput = updateLevel(dt, t);
   else {
     for (const r of braceRings) r.visible = false;
@@ -722,4 +730,4 @@ ui.setConnected(false, false);
 frame();
 
 // Dev-only handle for automated playtesting.
-if (import.meta.env.DEV) window.__itt = { session, snapshots, scene, views: () => ({ levelView, bossView }) };
+if (import.meta.env.DEV) window.__itt = { session, snapshots, scene, ui, views: () => ({ levelView, bossView }) };

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f6ead3" />
+    <meta name="theme-color" content="#1a100b" />
     <meta name="description" content="It Takes Two - Online — a two-player online co-op adventure. Cody and May, turned into dolls by their daughter Rose, must work together to find their way back to her." />
     <title>It Takes Two - Online</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Lilita+One&family=Nunito:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
@@ -19,110 +19,150 @@
   <body>
     <div id="stage"></div>
 
-    <div id="ui">
+    <div id="ui" data-screen="title">
+      <div class="vignette" aria-hidden="true"></div>
+
       <div class="topbar">
         <div id="net-status" class="net-status" role="status"></div>
         <button id="pause-btn" class="icon-btn" type="button" aria-label="Pause menu" hidden>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" /></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
         </button>
         <button id="mute-btn" class="icon-btn" type="button" aria-label="Mute sound" aria-pressed="false">
-          <svg class="ico-sound" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>
-          <svg class="ico-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="wave" d="M17 9.5l5 5M22 9.5l-5 5" /></svg>
+          <svg class="ico-sound" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" /></svg>
+          <svg class="ico-muted" viewBox="0 0 24 24" aria-hidden="true"><path class="fill" d="M4 9h4l5-4v14l-5-4H4z" /><path d="M17 9.5l5 5M22 9.5l-5 5" /></svg>
         </button>
       </div>
 
-      <!-- Main menu -->
-      <section class="screen is-active" data-screen="menu">
-        <div class="panel panel--menu">
-          <div class="logo">
-            <span class="sparkle sparkle--a" aria-hidden="true">♥</span>
-            <span class="sparkle sparkle--b" aria-hidden="true">✦</span>
-            <span class="sparkle sparkle--c" aria-hidden="true">♥</span>
+      <!-- The logo lives outside the screens so it can glide from the title screen into the menu. -->
+      <div class="brand">
+        <div class="logo">
             <h1 aria-label="It Takes Two - Online"><span class="wordmark" aria-hidden="true"><span class="wm-line wm-line--it"><span class="wm-ch wm-i" style="--i:0">ı<svg class="wm-fig wm-fig--dot" viewBox="0 0 40 52" aria-hidden="true"><path class="cloth-may" d="M9 50l3-14h16l3 14z"/><path class="outline" d="M9 50l3-14h16l3 14z"/><circle class="hair-may" cx="20" cy="6.5" r="6"/><circle class="skin-wood" cx="20" cy="23" r="12.5"/><path class="hair-may" d="M7.6 22c0-8 5.4-12.5 12.4-12.5S32.4 14 32.4 22c-3-4.5-7-6.5-12.4-6.5S10.6 17.5 7.6 22z"/><circle class="outline" cx="20" cy="23" r="12.5"/><ellipse class="eye" cx="15.5" cy="24.5" rx="1.9" ry="2.6"/><ellipse class="eye" cx="24.5" cy="24.5" rx="1.9" ry="2.6"/></svg></span><span class="wm-ch" style="--i:1">t</span></span><span class="wm-line wm-line--takes"><span class="wm-ch" style="--i:2">t</span><span class="wm-ch" style="--i:3">a</span><span class="wm-ch" style="--i:4">k</span><span class="wm-ch" style="--i:5">e</span><span class="wm-ch" style="--i:6">s</span></span><span class="wm-line wm-line--two"><span class="wm-ch" style="--i:7">t</span><span class="wm-ch" style="--i:8">w</span><span class="wm-ch wm-o" style="--i:9">o<svg class="wm-fig wm-fig--in-o" viewBox="0 0 40 48" aria-hidden="true"><path class="cloth-cody" d="M6 48c0-9 6-13 14-13s14 4 14 13z"/><path class="outline" d="M6 48c0-9 6-13 14-13s14 4 14 13z"/><circle class="skin-clay" cx="7" cy="25" r="3.6"/><circle class="skin-clay" cx="33" cy="25" r="3.6"/><circle class="skin-clay" cx="20" cy="24" r="13"/><circle class="outline" cx="20" cy="24" r="13"/><g class="hair-cody"><circle cx="20" cy="10" r="6"/><circle cx="12.5" cy="13" r="5"/><circle cx="27.5" cy="12.5" r="5"/></g><ellipse class="eye" cx="15.5" cy="24" rx="1.9" ry="2.6"/><ellipse class="eye" cx="24.5" cy="24" rx="1.9" ry="2.6"/><ellipse class="skin-clay" cx="20" cy="28.5" rx="3" ry="2.4" style="fill:#d58f66"/></svg></span></span></span><span class="wordmark-sub" aria-hidden="true">Online</span></h1>
-          </div>
-          <p class="tagline">A wooden doll. A clay doll. One red thread. Find your way back to Rose.</p>
+        </div>
+      </div>
 
-          <button id="create-btn" class="btn btn--primary btn--lg" type="button">Create room</button>
-
-          <div class="divider"><span>or join a friend</span></div>
-
-          <form id="join-form" class="join-row" novalidate>
-            <input id="join-input" maxlength="4" placeholder="CODE" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-label="Room code" />
-            <button id="join-btn" class="btn btn--secondary" type="submit">Join</button>
-          </form>
-          <p id="join-error" class="form-error" role="alert"></p>
-
-          <ul class="howto">
-            <li><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>Move</span></li>
-            <li><span class="keys"><kbd class="wide">Space</kbd></span><span>Jump &middot; climb the thread</span></li>
-            <li><span class="keys"><kbd class="wide">Shift</kbd></span><span>Brace &mdash; anchor your partner</span></li>
-            <li><span class="keys"><svg class="mini-chain" viewBox="0 0 64 36" aria-hidden="true"><path d="M4 26c10-14 18 6 28-6s18 8 28-8" /><path class="mini-heart" d="M32 30c-9-6-11-12-7-15 3-2 6 0 7 2 1-2 4-4 7-2 4 3 2 9-7 15z" /></svg></span><span>Stay close &mdash; you share a thread</span></li>
-          </ul>
+      <!-- Title: press any key -->
+      <section class="screen screen--title is-active" data-screen="title">
+        <div class="title-foot">
+          <p class="press-start"><span class="press-key"><span class="on-keys">Press any key</span><span class="on-touch">Tap</span></span> to begin</p>
+          <p class="title-note">A two-player online co-op adventure &middot; Chapter One: The Shed</p>
         </div>
       </section>
 
-      <!-- Lobby: room + doll on the left, chapter map on the right -->
+      <!-- Main menu -->
+      <section class="screen screen--menu" data-screen="menu">
+        <div class="menu-col">
+          <nav class="menu-list" aria-label="Main menu">
+            <button id="create-btn" class="menu-item" type="button" data-nav>
+              <span class="mi-marker" aria-hidden="true"></span>
+              <span class="mi-text"><span class="mi-label" data-label>Create Room</span><span class="mi-desc">Host a game and invite your partner</span></span>
+            </button>
+            <button id="join-open-btn" class="menu-item" type="button" data-nav data-pane="join">
+              <span class="mi-marker" aria-hidden="true"></span>
+              <span class="mi-text"><span class="mi-label">Join Room</span><span class="mi-desc">Enter your partner&rsquo;s four-letter code</span></span>
+            </button>
+            <button id="howto-open-btn" class="menu-item" type="button" data-nav data-pane="howto">
+              <span class="mi-marker" aria-hidden="true"></span>
+              <span class="mi-text"><span class="mi-label">How to Play</span><span class="mi-desc">Controls, the red thread and bracing</span></span>
+            </button>
+          </nav>
+        </div>
+
+        <aside id="join-pane" class="menu-pane panel" aria-labelledby="join-title" hidden>
+          <p class="eyebrow">Join a friend</p>
+          <h2 id="join-title">Enter room code</h2>
+          <p class="muted">Ask your partner for the code shown in their lobby.</p>
+          <form id="join-form" novalidate>
+            <label class="code-field">
+              <input id="join-input" maxlength="4" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-label="Room code" />
+              <span id="code-cells" class="code-cells" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+            </label>
+            <p id="join-error" class="form-error" role="alert"></p>
+            <div class="pane-actions">
+              <button id="join-btn" class="btn btn--primary btn--lg" type="submit" data-nav><span data-label>Join room</span></button>
+              <button class="btn btn--ghost" type="button" data-close-pane data-nav>Back</button>
+            </div>
+          </form>
+        </aside>
+
+        <aside id="howto-pane" class="menu-pane panel panel--howto" aria-labelledby="howto-title" hidden>
+          <p class="eyebrow">How to play</p>
+          <h2 id="howto-title">Two dolls, one thread</h2>
+          <ul class="controls">
+            <li><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span>Move</span></li>
+            <li><span class="keys"><kbd class="wide">Space</kbd></span><span>Jump</span></li>
+            <li><span class="keys"><kbd class="wide">Shift</kbd></span><span>Hold to brace</span></li>
+            <li><span class="keys"><kbd>Esc</kbd></span><span>Pause</span></li>
+          </ul>
+          <ul class="tips">
+            <li>
+              <svg viewBox="0 0 48 48" aria-hidden="true"><path class="tip-thread" d="M6 30c8-12 14 6 22-6s10 4 14-2" /><circle class="tip-may" cx="6" cy="30" r="5" /><circle class="tip-cody" cx="42" cy="22" r="5" /></svg>
+              <p><strong>Rose&rsquo;s red thread</strong> ties May and Cody together. Wander too far and it drags your partner along.</p>
+            </li>
+            <li>
+              <svg viewBox="0 0 48 48" aria-hidden="true"><ellipse class="tip-ring" cx="24" cy="38" rx="16" ry="5" /><path class="tip-may-body" d="M17 37l3-14h8l3 14z" /><circle class="tip-may" cx="24" cy="15" r="7" /></svg>
+              <p><strong>Brace</strong> to plant your feet. Nothing moves you &mdash; not drafts, not your partner hanging below.</p>
+            </li>
+            <li>
+              <svg viewBox="0 0 48 48" aria-hidden="true"><path class="tip-thread" d="M24 6v30" /><circle class="tip-cody" cx="24" cy="38" r="6" /><path class="tip-arrow" d="M14 22l-4-6-4 6M10 16v14" /></svg>
+              <p><strong>Climb</strong> by pressing Jump while you dangle below a braced partner.</p>
+            </li>
+          </ul>
+          <div class="pane-actions">
+            <button class="btn btn--ghost" type="button" data-close-pane data-nav>Back</button>
+          </div>
+        </aside>
+
+        <footer class="screen-foot">
+          <span class="foot-note">Chapter One &middot; The Shed</span>
+          <span class="prompts"><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span><span><kbd class="wide-sm">Enter</kbd> Select</span><span class="prompt-back"><kbd>Esc</kbd> Back</span></span>
+        </footer>
+      </section>
+
+      <!-- Lobby: dolls on the left, chapter map on the right -->
       <section class="screen screen--lobby" data-screen="lobby">
+        <header class="lobby-bar">
+          <button id="leave-btn" class="back-btn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>Leave room</button>
+          <div class="room-chip">
+            <span class="room-chip-label">Room code</span>
+            <span id="room-code" class="room-code">----</span>
+            <button id="copy-btn" class="icon-btn icon-btn--sm" type="button" aria-label="Copy room code">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
+            </button>
+          </div>
+        </header>
+
         <div class="panel panel--lobby">
-          <div class="lobby-head">
-            <div>
-              <p class="eyebrow">Room code</p>
-              <div class="room-code">
-                <span id="room-code">----</span>
-                <button id="copy-btn" class="icon-btn icon-btn--sm" type="button" aria-label="Copy room code">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="3" /><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" /></svg>
-                </button>
-              </div>
-            </div>
-            <button id="leave-btn" class="btn btn--ghost btn--sm" type="button">Leave</button>
-          </div>
-
-          <div class="slots">
-            <div class="slot" id="slot-me">
-              <img class="slot-portrait" alt="" />
-              <div class="slot-text">
-                <p class="slot-name">You</p>
-                <p class="slot-sub"></p>
-              </div>
-            </div>
-            <div class="slot is-empty" id="slot-mate">
-              <img class="slot-portrait" alt="" />
-              <div class="slot-text">
-                <p class="slot-name">Teammate</p>
-                <p class="slot-sub">Waiting to join&hellip;</p>
-              </div>
-            </div>
-          </div>
-
           <p class="eyebrow">Choose your doll</p>
-          <div id="creature-grid" class="creature-grid" role="radiogroup" aria-label="Doll"></div>
-          <p class="hint hint--doll">Pick your partner’s doll and you’ll swap.</p>
+          <div id="doll-cards" class="doll-cards" role="radiogroup" aria-label="Doll"></div>
+          <p class="hint">Pick your partner&rsquo;s doll and you&rsquo;ll swap.</p>
         </div>
 
         <div class="panel panel--map">
           <p class="eyebrow">Chapter one</p>
           <h2 class="map-title">The Shed</h2>
           <ol id="level-list" class="level-list"></ol>
-          <button id="start-btn" class="btn btn--primary btn--lg" type="button" disabled>Waiting for teammate&hellip;</button>
-          <p id="lobby-hint" class="hint">Share the code — your friend joins from the main menu.</p>
+          <button id="start-btn" class="btn btn--primary btn--lg" type="button" disabled>Waiting for partner&hellip;</button>
+          <p id="lobby-hint" class="hint">Share the code &mdash; your friend joins from the main menu.</p>
         </div>
       </section>
 
-      <!-- Story dialogue -->
+      <!-- Story cutscene -->
       <section class="screen screen--story" data-screen="story">
+        <div class="letterbox letterbox--top" aria-hidden="true"></div>
+        <div class="letterbox letterbox--bottom" aria-hidden="true"></div>
         <div id="title-card" class="title-card">
           <p id="title-card-kicker" class="title-kicker"></p>
           <h2 id="title-card-name"></h2>
-          <p id="title-card-tagline"></p>
+          <p id="title-card-tagline" class="title-tagline"></p>
         </div>
-        <button id="story-skip" class="btn btn--ghost btn--sm story-skip" type="button">Skip</button>
+        <button id="story-skip" class="skip-btn" type="button"><kbd>Esc</kbd> Skip</button>
         <div id="dialogue" class="dialogue" aria-live="polite">
           <div id="dialogue-portrait" class="dialogue-portrait"></div>
           <div class="dialogue-body">
             <p id="dialogue-name" class="dialogue-name"></p>
             <p id="dialogue-text" class="dialogue-text"></p>
-            <p id="dialogue-next" class="dialogue-next"><kbd class="wide">Space</kbd> Continue</p>
           </div>
+          <p id="dialogue-next" class="dialogue-next"><kbd class="wide-sm">Space</kbd><span class="next-arrow" aria-hidden="true"></span></p>
         </div>
         <p id="story-waiting" class="story-waiting">Waiting for your partner to finish reading&hellip;</p>
       </section>
@@ -130,85 +170,95 @@
       <!-- In-level HUD -->
       <section class="screen screen--hud" data-screen="hud">
         <div class="hud-level">
-          <p id="hud-level-kicker" class="eyebrow"></p>
+          <p id="hud-level-kicker" class="hud-kicker"></p>
           <p id="hud-level-name" class="hud-level-name"></p>
         </div>
         <div class="hud-top">
           <div class="hud-timer"><span id="hud-time">0.0</span><small>s</small></div>
         </div>
         <div id="boss-bar" class="boss-bar">
-          <p class="boss-name">The Toolbox</p>
-          <div id="boss-hp" class="boss-hp"></div>
+          <div class="boss-emblem" id="boss-emblem" aria-hidden="true"></div>
+          <div class="boss-meta">
+            <p class="boss-name">The Toolbox</p>
+            <div id="boss-hp" class="boss-hp"></div>
+          </div>
         </div>
-        <div id="hud-gems" class="hud-gems" aria-label="Hearts"></div>
+        <div class="hud-hearts" aria-label="Hearts">
+          <div id="hud-gems" class="hud-gems"></div>
+          <span id="hud-gem-count" class="hud-gem-count">0/3</span>
+        </div>
+        <div id="hud-players" class="hud-players"></div>
         <div id="banner" class="banner" aria-live="polite"></div>
         <div id="hud-hint" class="hud-hint" aria-live="polite"></div>
         <div class="hud-controls">
-          <span><kbd>WASD</kbd> Move</span><span><kbd>Space</kbd> Jump</span><span id="brace-indicator"><kbd>Shift</kbd> Brace</span>
+          <span><kbd>WASD</kbd> Move</span><span><kbd>Space</kbd> Jump</span><span id="brace-indicator"><kbd>Shift</kbd> Brace</span><span><kbd>Esc</kbd> Pause</span>
         </div>
       </section>
 
       <!-- Level complete -->
-      <section class="screen" data-screen="complete">
-        <div class="panel panel--result">
-          <p id="complete-kicker" class="eyebrow">Level complete</p>
-          <h2 id="complete-name"></h2>
+      <section class="screen screen--result" data-screen="complete">
+        <div class="result">
+          <div class="ribbon"><span id="complete-kicker">Level complete</span></div>
+          <h2 id="complete-name" class="result-title"></h2>
           <div id="complete-gems" class="result-gems"></div>
           <dl class="stats">
             <div><dt>Time</dt><dd id="complete-time">0.0s</dd></div>
             <div><dt>Hearts</dt><dd id="complete-shards">0/3</dd></div>
             <div><dt>Falls</dt><dd id="complete-falls">0</dd></div>
           </dl>
-          <div class="btn-row">
-            <button id="next-btn" class="btn btn--primary btn--lg" type="button">Continue</button>
+          <div class="result-actions">
+            <button id="next-btn" class="btn btn--primary btn--lg" type="button" data-nav>Continue</button>
             <div class="btn-pair">
-              <button id="replay-btn" class="btn btn--ghost" type="button">Replay</button>
-              <button id="map-btn" class="btn btn--ghost" type="button">Chapter map</button>
+              <button id="replay-btn" class="btn btn--ghost" type="button" data-nav>Replay</button>
+              <button id="map-btn" class="btn btn--ghost" type="button" data-nav>Chapter map</button>
             </div>
           </div>
         </div>
       </section>
 
       <!-- Chapter complete -->
-      <section class="screen" data-screen="chapter">
-        <div class="panel panel--result panel--chapter">
-          <div class="chapter-shard" aria-hidden="true"></div>
-          <p class="eyebrow">Chapter one complete</p>
-          <h2>The Shed</h2>
-          <p class="muted">The Toolbox is beaten and the shed door creaks open. Rose is still waiting — and the way home is a long one.</p>
+      <section class="screen screen--result" data-screen="chapter">
+        <div class="result result--chapter">
+          <div class="chapter-heart" aria-hidden="true"></div>
+          <div class="ribbon"><span>Chapter one complete</span></div>
+          <h2 class="result-title">The Shed</h2>
+          <p class="result-text">The Toolbox is beaten and the shed door creaks open. Rose is still waiting &mdash; and the way home is a long one.</p>
           <p class="result-best">Hearts gathered <span id="chapter-gems">0/15</span></p>
           <p class="tbc">To be continued&hellip;</p>
-          <div class="btn-row">
-            <button id="chapter-map-btn" class="btn btn--primary btn--lg" type="button">Back to the chapter map</button>
+          <div class="result-actions">
+            <button id="chapter-map-btn" class="btn btn--primary btn--lg" type="button" data-nav>Back to the chapter map</button>
           </div>
         </div>
       </section>
 
       <!-- Teammate left / connection lost -->
-      <section class="screen" data-screen="disconnected">
-        <div class="panel panel--notice">
-          <h2 id="disconnect-title">Your teammate left</h2>
-          <p id="disconnect-text" class="muted">The thread snapped. Keep the room open for someone new, or head back to the menu.</p>
-          <div class="btn-row">
-            <button id="back-to-lobby-btn" class="btn btn--primary" type="button">Back to lobby</button>
-            <button id="disconnect-menu-btn" class="btn btn--ghost" type="button">Main menu</button>
+      <section class="screen screen--result" data-screen="disconnected">
+        <div class="result result--notice">
+          <div class="notice-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M4 30c8-10 12 2 17-4" /><path d="M27 22c5-6 9 6 17-4" /></svg></div>
+          <h2 id="disconnect-title" class="result-title">Your partner left</h2>
+          <p id="disconnect-text" class="result-text">The thread snapped. Keep the room open for someone new, or head back to the menu.</p>
+          <div class="result-actions">
+            <button id="back-to-lobby-btn" class="btn btn--primary btn--lg" type="button" data-nav>Back to lobby</button>
+            <button id="disconnect-menu-btn" class="btn btn--ghost" type="button" data-nav>Main menu</button>
           </div>
         </div>
       </section>
 
       <div id="pause" class="pause" role="dialog" aria-modal="true" aria-labelledby="pause-title">
-        <div class="panel">
-          <h2 id="pause-title">Paused</h2>
-          <p class="muted">You’re playing online — your partner is still in the level.</p>
-          <div class="btn-row">
-            <button id="resume-btn" class="btn btn--primary btn--lg" type="button">Resume</button>
-            <button id="pause-restart-btn" class="btn btn--secondary" type="button">Restart level</button>
-            <div class="btn-pair">
-              <button id="pause-map-btn" class="btn btn--ghost" type="button">Chapter map</button>
-              <button id="pause-leave-btn" class="btn btn--ghost" type="button">Leave room</button>
-            </div>
-          </div>
+        <div class="pause-col">
+          <p class="eyebrow eyebrow--light">Online &middot; your partner keeps playing</p>
+          <h2 id="pause-title" class="pause-title">Paused</h2>
+          <nav class="menu-list">
+            <button id="resume-btn" class="menu-item" type="button" data-nav><span class="mi-marker" aria-hidden="true"></span><span class="mi-text"><span class="mi-label">Resume</span></span></button>
+            <button id="pause-restart-btn" class="menu-item" type="button" data-nav><span class="mi-marker" aria-hidden="true"></span><span class="mi-text"><span class="mi-label">Restart level</span><span class="mi-desc">Both of you go back to the start</span></span></button>
+            <button id="pause-map-btn" class="menu-item" type="button" data-nav><span class="mi-marker" aria-hidden="true"></span><span class="mi-text"><span class="mi-label">Chapter map</span><span class="mi-desc">Host only &mdash; back to level select</span></span></button>
+            <button id="pause-leave-btn" class="menu-item" type="button" data-nav><span class="mi-marker" aria-hidden="true"></span><span class="mi-text"><span class="mi-label">Leave room</span><span class="mi-desc">Return to the main menu</span></span></button>
+          </nav>
         </div>
+        <footer class="screen-foot">
+          <span></span>
+          <span class="prompts"><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> Navigate</span><span><kbd class="wide-sm">Enter</kbd> Select</span><span><kbd>Esc</kbd> Resume</span></span>
+        </footer>
       </div>
 
       <div id="fade" class="fade"></div>
