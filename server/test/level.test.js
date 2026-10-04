@@ -98,7 +98,7 @@ describe('level data', () => {
 });
 
 describe('co-op mechanics in real level layouts', () => {
-  test('jump pad launches both guardians onto the ruins (Awakening)', () => {
+  test('a spring launches both dolls onto the upper ledge (Wake-Up Call)', () => {
     const { s, a, b, of } = sim('awakening');
     put(a, -0.6, 1.8, -31.5);
     put(b, 0.6, 1.8, -30);
@@ -118,7 +118,7 @@ describe('co-op mechanics in real level layouts', () => {
     assert.equal(up.size, 2);
   });
 
-  test('a braced guardian anchors a dangling partner, who can grab the cliff shard and climb back', () => {
+  test('a braced doll anchors a dangling partner, who can grab the heart and climb back', () => {
     const { s, a, b, of } = sim('awakening');
     put(a, 3.5, 1.8, -31);
     put(b, 4.4, 1.8, -32);
@@ -126,7 +126,7 @@ describe('co-op mechanics in real level layouts', () => {
       a.input = { x: 0, z: 0, brace: true };
       b.input = { x: i < 20 ? 1 : Math.floor(i / 12) % 2 ? 1 : -1, z: 0 };
     });
-    assert.ok(of('gem').length >= 1, 'shard collected while dangling');
+    assert.ok(of('gem').length >= 1, 'heart collected while dangling');
     assert.ok(Math.abs(a.body.position.x - 3.5) < 0.05, 'anchor did not budge');
     let back = false;
     run(s, 3, (i) => {
@@ -135,11 +135,11 @@ describe('co-op mechanics in real level layouts', () => {
       if (i % 8 === 0) press(s, b);
       if (b.grounded && b.body.position.y > 2) back = true;
     });
-    assert.ok(back, 'partner climbed back up the chain');
+    assert.ok(back, 'partner climbed back up the thread');
     assert.ok(of('climb').length > 0);
   });
 
-  test('climbing the chain gets a partner up a wall too tall to jump (Windward Cliffs)', () => {
+  test('climbing the thread gets a partner up a wall too tall to jump (Through the Draft)', () => {
     const { s, a, b } = sim('windward-cliffs');
     put(a, 0, 2.8, -31.2);
     put(b, 0, 0, -29);
@@ -152,7 +152,7 @@ describe('co-op mechanics in real level layouts', () => {
     assert.ok(b.body.position.y > 3.3 && b.grounded, 'on top of the tier');
   });
 
-  test('without bracing, a gust blows guardians off the bridge; braced, they hold', () => {
+  test('without bracing, the draft blows dolls off the bridge; braced, they hold', () => {
     for (const brace of [false, true]) {
       const { s, a, b } = sim('windward-cliffs');
       put(a, 0, 0, -10);
@@ -167,7 +167,7 @@ describe('co-op mechanics in real level layouts', () => {
     }
   });
 
-  test('a lift rises while its plate is held (Broken Bridge)', () => {
+  test('a lift rises while its plate is held (The Workbench)', () => {
     const { s, a, b } = sim('broken-bridge');
     put(a, 0, 0, -57);
     put(b, 2.2, 0, -54);
@@ -189,7 +189,7 @@ describe('co-op mechanics in real level layouts', () => {
     assert.ok(Math.abs(door.body.position.y - closedY) < 0.05, 'door closed again');
   });
 
-  test('riders stay on a moving ferry', () => {
+  test('riders stay on a moving tray', () => {
     const { s, a, b } = sim('broken-bridge');
     put(a, 0, 0, -12);
     put(b, 0, 0, -12.8);
@@ -198,7 +198,7 @@ describe('co-op mechanics in real level layouts', () => {
     assert.ok(a.body.position.z < -16, `carried forward (z=${a.body.position.z.toFixed(2)})`);
   });
 
-  test('crumbling stone falls after being stood on, then comes back', () => {
+  test('soggy cardboard falls after being stood on, then comes back', () => {
     const { s, a, b, of } = sim('awakening');
     put(a, 0, 5, -44.5);
     put(b, 0, 5, -40);
@@ -211,7 +211,7 @@ describe('co-op mechanics in real level layouts', () => {
     assert.equal(s.crumbles[0].state, 0);
   });
 
-  test('falling respawns both guardians at the last checkpoint', () => {
+  test('falling respawns both dolls at the last checkpoint', () => {
     const { s, a, b, of } = sim('awakening');
     put(a, 0, 1.8, -28.2);
     put(b, 1, 1.8, -28.2);
@@ -234,7 +234,7 @@ describe('co-op mechanics in real level layouts', () => {
     assert.equal(s.stats.totalGems, 3);
   });
 
-  test('one guardian alone at the goal is not enough', () => {
+  test('one doll alone at the goal is not enough', () => {
     const { s, a, b } = sim('awakening');
     put(a, 0, 5, -62.5);
     put(b, 0, 5, -58);
@@ -244,7 +244,7 @@ describe('co-op mechanics in real level layouts', () => {
 });
 
 describe('the Toolbox (boss)', () => {
-  test('standing on both runes at once strikes it; three strikes defeat it', () => {
+  test('standing on both power buttons at once strikes it; three strikes defeat it', () => {
     let seed = 5;
     const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     const { s, a, b, of } = sim('iron-warden', { random });
