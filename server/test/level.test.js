@@ -114,6 +114,7 @@ describe('co-op mechanics in real level layouts', () => {
       }
     });
     assert.equal(of('pad').length, 2);
+    for (const e of of('pad')) assert.deepEqual(s.def.pads[e.pad].pos, e.pos);
     assert.equal(up.size, 2);
   });
 

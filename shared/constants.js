@@ -1,6 +1,10 @@
 // Gameplay tuning shared by the authoritative server and the client renderer.
 
 export const TICK_RATE = 30;
+
+// Room codes avoid look-alike characters (I/1, O/0).
+export const ROOM_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+export const ROOM_CODE_LENGTH = 4;
 export const GRAVITY = 20;
 
 export const PLAYER_RADIUS = 0.6;

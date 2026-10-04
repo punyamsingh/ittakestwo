@@ -5,9 +5,9 @@ import { fileURLToPath } from 'url';
 import { Server } from 'socket.io';
 import { customAlphabet } from 'nanoid';
 import { Room } from './room.js';
-import { isValidAvatarType } from '../shared/constants.js';
+import { isValidAvatarType, ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from '../shared/constants.js';
 
-const genCode = customAlphabet('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', 4);
+const genCode = customAlphabet(ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH);
 const CLIENT_DIST = fileURLToPath(new URL('../client/dist', import.meta.url));
 
 export function createApp() {

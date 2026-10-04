@@ -1,8 +1,8 @@
-import { CHARACTERS, CHARACTER_TYPES } from '@shared/constants.js';
+import { CHARACTERS, CHARACTER_TYPES, ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from '@shared/constants.js';
 import { LEVELS } from '@shared/levels.js';
 import { CREATURES } from './render/creatures.js';
 
-const CODE_CHARS = /[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g;
+const CODE_CHARS = new RegExp(`[^${ROOM_CODE_ALPHABET}]`, 'g');
 const $ = (id) => document.getElementById(id);
 
 const EMBLEMS = {
@@ -203,7 +203,7 @@ export function createUI({ portraits, audio, on }) {
     whenConnected($('create-btn'), () => on.create());
   });
   joinInput.addEventListener('input', () => {
-    joinInput.value = joinInput.value.toUpperCase().replace(CODE_CHARS, '').slice(0, 4);
+    joinInput.value = joinInput.value.toUpperCase().replace(CODE_CHARS, '').slice(0, ROOM_CODE_LENGTH);
     $('join-error').textContent = '';
     joinInput.parentElement.classList.remove('is-shaking');
     renderCode();

@@ -78,7 +78,8 @@ export class Warden {
         if (this.rainLeft > 0 && this.attackT > 0.4) {
           this.attackT = 0;
           this.rainLeft--;
-          const target = s.players.filter((p) => p.alive)[Math.floor(s.random() * 2)] ?? null;
+          const living = s.players.filter((p) => p.alive);
+          const target = living.length ? living[Math.floor(s.random() * living.length)] : null;
           let x;
           let z;
           if (target && s.random() < 0.6) {

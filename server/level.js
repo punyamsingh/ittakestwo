@@ -187,7 +187,7 @@ export class LevelSim {
     this.boss?.tick(dt);
 
     const vyBefore = this.players.map((p) => p.body.velocity.y);
-    this.world.step(DT);
+    this.world.step(dt);
     this.updateGrounded(vyBefore);
     this.updatePads();
     this.updatePlates();
@@ -221,26 +221,26 @@ export class LevelSim {
   }
 
   updateCrumbles(dt) {
-    for (const c of this.crumbles) {
+    this.crumbles.forEach((c, index) => {
       if (c.state === 0) {
         if (this.players.some((p) => p.alive && p.groundBody === c.body)) {
           c.state = 1;
           c.timer = CRUMBLE.delay;
-          this.emit('crumble', { index: this.crumbles.indexOf(c), state: 1 });
+          this.emit('crumble', { index, state: 1 });
         }
       } else {
         c.timer -= dt;
-        if (c.timer > 0) continue;
+        if (c.timer > 0) return;
         if (c.state === 1) {
           c.state = 2;
           c.timer = CRUMBLE.respawn;
           this.world.removeBody(c.body);
-          this.emit('crumble', { index: this.crumbles.indexOf(c), state: 2 });
+          this.emit('crumble', { index, state: 2 });
         } else {
           this.restoreCrumble(c);
         }
       }
-    }
+    });
   }
 
   restoreCrumble(c) {
@@ -319,7 +319,6 @@ export class LevelSim {
       if (!a.braced) a.body.applyForce(dir.scale(mag));
       if (!b.braced) b.body.applyForce(dir.scale(-mag));
     }
-
   }
 
   partnerOf(p) {
@@ -464,7 +463,7 @@ export class LevelSim {
   }
 
   updatePads() {
-    for (const pad of this.pads) {
+    this.pads.forEach((pad, padIndex) => {
       for (const p of this.players) {
         if (!p.alive || !p.grounded) continue;
         const { x, z } = p.body.position;
@@ -472,9 +471,9 @@ export class LevelSim {
         p.body.velocity.y = pad.power ?? PAD_POWER;
         p.grounded = false;
         p.lastGroundedAt = -Infinity;
-        this.emit('pad', { index: p.index, pos: pad.pos });
+        this.emit('pad', { index: p.index, pad: padIndex, pos: pad.pos });
       }
-    }
+    });
   }
 
   plate(id) {

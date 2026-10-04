@@ -184,6 +184,8 @@ function stageAtSpawn(def) {
     const { entry } = syncCreature(p);
     placeCreature(entry, p.index, def.spawn);
   }
+  cam.setMode(def.camera === 'arena' ? 'arena' : 'level');
+  cam.snap();
 }
 
 // ---------- UI ----------
@@ -202,14 +204,14 @@ const ui = createUI({
     toMap: () => socket.emit('to-map'),
     backToLobby: enterLobby,
     togglePause: () => setPaused(!paused),
-    pickCreature: (type) => pickAvatar({ type }),
+    pickCreature: pickAvatar,
   },
 });
 
-function pickAvatar(change) {
+function pickAvatar(type) {
   const self = me();
   if (!self) return;
-  self.avatar = { ...self.avatar, ...change };
+  self.avatar = avatarFor(type);
   store('itt:avatar', self.avatar);
   socket.emit('set-avatar', self.avatar);
   refreshLobby();
@@ -236,9 +238,13 @@ function syncPauseUi() {
 // ---------- flow ----------
 
 const LOBBY_SPOTS = [
-  [-1.35, 2.2],
-  [1.35, 2.2],
+  [-1.35, 0, 2.2],
+  [1.35, 0, 2.2],
 ];
+
+function placeInLobby(entry, index) {
+  placeCreature(entry, index, LOBBY_SPOTS[index], 0);
+}
 
 function enterLobby() {
   session.phase = 'lobby';
@@ -248,7 +254,7 @@ function enterLobby() {
   refreshLobby();
   for (const p of session.players) {
     const entry = creatures[p.index];
-    if (entry) placeCreature(entry, p.index, [LOBBY_SPOTS[p.index][0], 0, LOBBY_SPOTS[p.index][1]], 0);
+    if (entry) placeInLobby(entry, p.index);
   }
   ui.show('lobby');
 }
@@ -261,7 +267,7 @@ function refreshLobby() {
   for (const p of session.players) {
     const { entry, changed } = syncCreature(p);
     if (changed) {
-      placeCreature(entry, p.index, [LOBBY_SPOTS[p.index][0], 0, LOBBY_SPOTS[p.index][1]], 0);
+      placeInLobby(entry, p.index);
       hop(entry);
       effects.sparkle([entry.root.position.x, 0.6, entry.root.position.z], p.avatar.color, 16);
     }
@@ -303,8 +309,6 @@ function beginLevel(def, players) {
     players: players.map((p) => ({ index: p.index, type: p.avatar.type, color: p.avatar.color, me: p.id === socket.id, image: portraits.get(p.avatar) })),
   });
   setPaused(false);
-  cam.setMode(def.camera === 'arena' ? 'arena' : 'level');
-  cam.snap();
 }
 
 function saveProgress(def, stats, unlocked) {
@@ -395,8 +399,6 @@ socket.on('story', async ({ levelId }) => {
   input.setEnabled(false);
   loadLevel(def);
   stageAtSpawn(def);
-  cam.setMode(def.camera === 'arena' ? 'arena' : 'level');
-  cam.snap();
   await runStory(def, 'before');
   if (session.phase !== 'story') return;
   socket.emit('story-done');
@@ -521,7 +523,7 @@ function handleEvent(type, e) {
     case 'pad':
       audio.pad();
       effects.sparkle([e.pos[0], e.pos[1] + 0.4, e.pos[2]], '#ffd36b', 18);
-      levelView?.padKick((levelDef.pads ?? []).findIndex((p) => p.pos[0] === e.pos[0] && p.pos[2] === e.pos[2]));
+      levelView?.padKick(e.pad);
       break;
     case 'plate':
       audio.plate(e.active);
@@ -615,8 +617,10 @@ function updateLevel(dt, t) {
       animateCreature(entry, dt, t, { vel: null, grounded: true, alive: true, faceCamera: true, floorY: levelView.groundAt(pos.x, pos.y + 0.3, pos.z) });
     }
     if (creatures[0] && creatures[1]) {
-      anchorA.copy(creatures[0].root.position).add({ x: 0, y: 0.55, z: 0 });
-      anchorB.copy(creatures[1].root.position).add({ x: 0, y: 0.55, z: 0 });
+      anchorA.copy(creatures[0].root.position);
+      anchorB.copy(creatures[1].root.position);
+      anchorA.y += 0.55;
+      anchorB.y += 0.55;
       chain.update(anchorA, anchorB, t, levelView.groundAt);
     }
     focus.set(...levelDef.spawn);
